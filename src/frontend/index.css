@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+
+    /* Vibrant color palette for SafeLoved */
+    --background: 0.98 0 0;
+    --foreground: 0.2 0 0;
+
+    --card: 1 0 0;
+    --card-foreground: 0.2 0 0;
+
+    --popover: 1 0 0;
+    --popover-foreground: 0.2 0 0;
+
+    /* Primary: Vibrant Purple */
+    --primary: 0.55 0.25 290;
+    --primary-foreground: 0.98 0 0;
+
+    /* Secondary: Bright Cyan */
+    --secondary: 0.65 0.2 200;
+    --secondary-foreground: 0.98 0 0;
+
+    /* Accent: Energetic Pink */
+    --accent: 0.6 0.25 340;
+    --accent-foreground: 0.98 0 0;
+
+    --muted: 0.95 0 0;
+    --muted-foreground: 0.5 0 0;
+
+    --destructive: 0.55 0.25 25;
+    --destructive-foreground: 0.98 0 0;
+
+    --border: 0.9 0 0;
+    --input: 0.9 0 0;
+    --ring: 0.55 0.25 290;
+
+    --chart-1: 0.6 0.25 340;
+    --chart-2: 0.65 0.2 200;
+    --chart-3: 0.55 0.25 290;
+    --chart-4: 0.7 0.22 160;
+    --chart-5: 0.65 0.23 50;
+  }
+
+  .dark {
+    --background: 0.15 0 0;
+    --foreground: 0.95 0 0;
+
+    --card: 0.2 0 0;
+    --card-foreground: 0.95 0 0;
+
+    --popover: 0.18 0 0;
+    --popover-foreground: 0.95 0 0;
+
+    /* Primary: Vibrant Purple (adjusted for dark) */
+    --primary: 0.65 0.25 290;
+    --primary-foreground: 0.15 0 0;
+
+    /* Secondary: Bright Cyan (adjusted for dark) */
+    --secondary: 0.7 0.2 200;
+    --secondary-foreground: 0.15 0 0;
+
+    /* Accent: Energetic Pink (adjusted for dark) */
+    --accent: 0.68 0.25 340;
+    --accent-foreground: 0.15 0 0;
+
+    --muted: 0.25 0 0;
+    --muted-foreground: 0.65 0 0;
+
+    --destructive: 0.6 0.25 25;
+    --destructive-foreground: 0.95 0 0;
+
+    --border: 0.3 0 0;
+    --input: 0.3 0 0;
+    --ring: 0.65 0.25 290;
+
+    --chart-1: 0.68 0.25 340;
+    --chart-2: 0.7 0.2 200;
+    --chart-3: 0.65 0.25 290;
+    --chart-4: 0.72 0.22 160;
+    --chart-5: 0.7 0.23 50;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
