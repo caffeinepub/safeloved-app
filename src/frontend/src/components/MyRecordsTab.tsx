@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetAllRecordsForUser } from "@/hooks/useQueries";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, FileX, Loader2, Search } from "lucide-react";
+import { AlertCircle, Eye, FileX, Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { UserRecord } from "../backend";
 import RecordCard from "./RecordCard";
@@ -127,12 +127,25 @@ export default function MyRecordsTab({ userCode }: MyRecordsTabProps) {
         ))}
       </div>
 
-      {/* Results count */}
-      <div className="text-center">
+      {/* Results count + total views */}
+      <div className="text-center" data-ocid="records.card">
         <h3 className="text-xl font-semibold">{t.allRecords}</h3>
         <p className="text-muted-foreground">
           {filtered.length} / {records?.length ?? 0}
         </p>
+        {filtered.length > 0 &&
+          (() => {
+            const totalViews = filtered.reduce(
+              (sum, r) => sum + Number(r.viewCount),
+              0,
+            );
+            return totalViews > 0 ? (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                <Eye className="h-3 w-3 text-primary/70" />
+                <span>Toplam {totalViews} görüntülenme</span>
+              </p>
+            ) : null;
+          })()}
       </div>
 
       {/* Empty state */}

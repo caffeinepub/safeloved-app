@@ -41,6 +41,7 @@ import {
   Navigation,
   Phone,
   Printer,
+  RotateCcw,
   Share2,
   Trash2,
 } from "lucide-react";
@@ -492,6 +493,15 @@ export default function RecordCard({
     });
   };
 
+  // B3: Restore a previous version
+  const handleRestoreVersion = (v: RecordVersion) => {
+    setEditValues({ ...v.overrides });
+    setEditLocation("");
+    setShowVersionDialog(false);
+    setShowEditDialog(true);
+    toast.info("Eski versiyon yüklendi. Kaydet tuşuna basarak uygula.");
+  };
+
   // GPS location detection
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -518,6 +528,7 @@ export default function RecordCard({
     const contactInfo = getContactInfo();
     const title = getRecordTitle();
     const loc = location;
+    const o = overrides;
     const photoHtml = photo
       ? `<img src="${photo}" style="max-width:200px;max-height:200px;border-radius:8px;margin-bottom:12px;" />`
       : "";
@@ -525,8 +536,48 @@ export default function RecordCard({
       ? `<img src="${qrCodeUrl}" style="width:150px;height:150px;border:2px solid #e5e7eb;border-radius:8px;" />`
       : "";
     const locationHtml = loc
-      ? `<p><strong>${t.locationLabel}:</strong> ${loc}</p>`
+      ? `<div class="row"><span class="label">${t.locationLabel}:</span><span class="value">${loc}</span></div>`
       : "";
+
+    // Category-specific extra fields
+    let extraFieldsHtml = "";
+    if (record.recordData.__kind__ === "insan") {
+      const yas = o.yas || record.recordData.insan.yas.toString();
+      const iliski = o.iliski || record.recordData.insan.iliski;
+      const aciklama = o.aciklama || record.recordData.insan.aciklama;
+      extraFieldsHtml = `
+        <div class="row"><span class="label">${t.age || "Yaş"}:</span><span class="value">${yas}</span></div>
+        <div class="row"><span class="label">${t.relationship || "İlişki"}:</span><span class="value">${iliski}</span></div>
+        ${aciklama ? `<div class="row"><span class="label">${t.description || "Açıklama"}:</span><span class="value">${aciklama}</span></div>` : ""}
+      `;
+    } else if (record.recordData.__kind__ === "hayvan") {
+      const tur = o.tur || record.recordData.hayvan.tur;
+      const renk = o.renk || record.recordData.hayvan.renk;
+      const notlar = o.notlar || record.recordData.hayvan.notlar;
+      extraFieldsHtml = `
+        <div class="row"><span class="label">${t.species || "Tür"}:</span><span class="value">${tur}</span></div>
+        <div class="row"><span class="label">${t.color || "Renk"}:</span><span class="value">${renk}</span></div>
+        ${notlar ? `<div class="row"><span class="label">${t.notes || "Notlar"}:</span><span class="value">${notlar}</span></div>` : ""}
+      `;
+    } else if (record.recordData.__kind__ === "esya") {
+      const marka = o.marka || record.recordData.esya.marka;
+      const seriNo = o.seriNo || record.recordData.esya.seriNo;
+      const aciklama = o.aciklama || record.recordData.esya.aciklama;
+      extraFieldsHtml = `
+        <div class="row"><span class="label">${t.brand || "Marka"}:</span><span class="value">${marka}</span></div>
+        <div class="row"><span class="label">${t.serialNumber || "Seri No"}:</span><span class="value">${seriNo}</span></div>
+        ${aciklama ? `<div class="row"><span class="label">${t.description || "Açıklama"}:</span><span class="value">${aciklama}</span></div>` : ""}
+      `;
+    } else if (record.recordData.__kind__ === "arac") {
+      const marka = o.marka || record.recordData.arac.marka;
+      const model = o.model || record.recordData.arac.model;
+      const renk = o.renk || record.recordData.arac.renk;
+      extraFieldsHtml = `
+        <div class="row"><span class="label">${t.brand || "Marka"}:</span><span class="value">${marka}</span></div>
+        <div class="row"><span class="label">${t.model || "Model"}:</span><span class="value">${model}</span></div>
+        <div class="row"><span class="label">${t.color || "Renk"}:</span><span class="value">${renk}</span></div>
+      `;
+    }
 
     const html = `
       <!DOCTYPE html>
@@ -552,6 +603,7 @@ export default function RecordCard({
         <div class="section">
           <p class="code">${record.uniqueCode}</p>
           <div class="row"><span class="label">${t.fullName || "Ad"}:</span><span class="value">${title}</span></div>
+          ${extraFieldsHtml}
           <div class="row"><span class="label">${t.contactPersonLabel}</span><span class="value">${contactInfo.person}</span></div>
           <div class="row"><span class="label">${t.contactInfoLabel}</span><span class="value">${contactInfo.info}</span></div>
           ${locationHtml}
@@ -1032,9 +1084,22 @@ export default function RecordCard({
                   data-ocid={`record.item.${i + 1}`}
                   className="p-3 bg-muted/50 rounded-lg text-sm"
                 >
-                  <p className="font-medium text-xs text-muted-foreground mb-1">
-                    {t.version} {i + 1} — {new Date(v.savedAt).toLocaleString()}
-                  </p>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-medium text-xs text-muted-foreground">
+                      {t.version} {i + 1} —{" "}
+                      {new Date(v.savedAt).toLocaleString()}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs px-2 gap-1"
+                      onClick={() => handleRestoreVersion(v)}
+                      data-ocid="record.secondary_button"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      {"Geri Yükle"}
+                    </Button>
+                  </div>
                   <div className="space-y-1">
                     {Object.entries(v.overrides).map(([k, val]) => (
                       <div key={k} className="flex gap-2">

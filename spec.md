@@ -2,73 +2,47 @@
 
 ## Current State
 
-Backend (`main.mo`) şu an şunları destekliyor:
-- Kullanıcı profili oluşturma / kodu ile giriş
-- Kayıt oluşturma (insan, hayvan, eşya, araç kategorileri)
-- Kayıt sorgulama (uniqueCode ile)
-- Paylaşım linki oluşturma ve çözme
-- Rol tabanlı erişim (otomatik "user" rolü)
+Backend (main.mo) şu özellikler içeriyor:
+- UserProfile yönetimi (createNewUserCode, saveCallerUserProfile, getProfileByUserCode)
+- 4 kategori kayıt sistemi (insan, hayvan, esya, arac) ile tam CRUD
+- addNewRecord, getAllRecordsForUser, getRecordByUniqueCode
+- updateRecordData (kayıt düzenleme) -- backend'de var
+- updateRecordLocation (konum güncelleme) -- backend'de var
+- deleteRecord -- backend'de var
+- incrementViewCount, getRecordViewCount -- backend'de var
+- generateShareableLink, getRecordByShareableLink -- backend'de var
+- Kod üretimi: deterministik timestamp tabanlı (bilinen sorun, backend düzenleme kısıtlaması var)
 
-Frontend'de şu özellikler **görsel olarak var ama sadece localStorage'da tutuluyor** (backend desteği yok):
-- Fotoğraf ekleme/kaldırma (`safeloved_photo_<code>`)
-- Kayıt düzenleme (alan override'ları `safeloved_record_overrides_<code>`)
-- Versiyon geçmişi (`safeloved_versions_<code>`)
-- GPS konum (`safeloved_location_<code>`)
-- QR tarama sayacı (`safeloved_scan_<code>`)
-- QR tarama geçmişi (HISTORY_KEY)
-- Kayıt silme (sadece localStorage temizliyor)
+Frontend bileşenleri:
+- RecordCard.tsx: düzenleme, versiyon geçmişi (localStorage), fotoğraf (localStorage), konum, PDF export, silme -- HEPSI VAR ama backend senkronizasyonu kısmi
+- MyRecordsTab.tsx: arama, kategori filtresi -- VAR
+- InquiryScreen.tsx: kod arama, QR tarama, geçmiş, sesli arama -- VAR
+- viewCount backend'den alınıyor ve gösteriliyor -- ÇALIŞIYOR
+- Backend hook'ları: useUpdateRecordData, useUpdateRecordLocation, useDeleteRecord, useIncrementViewCount -- HEPSI VAR
+
+Eksikler:
+- Backend'de versiyon geçmişi yok (getRecordVersionHistory fonksiyonu yok) -- frontend sadece localStorage'a yazıyor
+- Fotoğraf blob-storage entegrasyonu yok -- localStorage base64 ile çalışıyor (sınırlı)
 
 ## Requested Changes (Diff)
 
 ### Add
-
-Backend'e eklenecekler:
-- `deleteRecord(userCode, uniqueCode)` -- kullanıcının bir kaydını siler
-- `updateRecordData(uniqueCode, recordData)` -- kayıt verilerini günceller (insan/hayvan/eşya/araç alanları)
-- `updateRecordLocation(uniqueCode, location)` -- konum string'i günceller
-- `incrementViewCount(uniqueCode)` -- QR tarama sayacını artırır (herkese açık)
-- `getRecordViewCount(uniqueCode)` -- görüntülenme sayısını döner (herkese açık)
-- `UserRecord` tipine `location` ve `viewCount` alanları eklenir
-
-Frontend'de güncelleme:
-- RecordCard: düzenleme/silme/konum/fotoğraf işlemleri backend'e yazılacak
-- InquiryScreen: QR tarama anında `incrementViewCount` çağrılacak
-- MyRecordsTab: silme sonrası backend'den yeniden yükleme
+- RecordCard.tsx'e versiyon geri yükleme butonu -- kullanıcı eski bir versiyonu göründüğünde "Bu versiyona Dön" butonuna basabilmeli (localStorage'da saklanan versiyon listesinden)
+- RecordCard.tsx'e daha iyi PDF export -- tüm kayıt alanlarını kategoriye göre göstermeli (şu an sadece başlık/iletişim bilgisi var)
+- InquiryScreen'de QR tarama sonrası tüm kayıt detaylarını gösterme -- şu an sadece iletişim bilgisi gösteriliyor, kategori detayları da eklenecek
+- MyRecordsTab'da toplam görüntülenme istatistikleri gösterme
 
 ### Modify
-
-- `UserRecord` tipi: `location: Text` ve `viewCount: Nat` alanları eklenir
-- `addNewRecord`: başlangıçta `location = ""`, `viewCount = 0` değerleriyle oluşturur
-- `getAllRecordsForUser`: güncel `location` ve `viewCount` ile döner
-- `getRecordByUniqueCode`: güncel `location` ve `viewCount` ile döner
-- Frontend `RecordCard`: localStorage yerine backend API çağırır
-- Frontend `InquiryScreen`: QR scan'de `incrementViewCount` çağırır
+- RecordCard.tsx versiyon dialog'unda "Bu Versiyona Dön" butonu eklenmeli
+- PDF export'ta tüm kategori alanları (yas/iliski/tur/renk/marka/model vs.) gösterilmeli
+- InquiryScreen'deki QR sonuç kartı eksik alanları tamamlanacak
 
 ### Remove
-
-- RecordCard'da localStorage-only kod kaldırılmaz ama backend başarısız olursa localStorage fallback olarak kalır
+- Yok
 
 ## Implementation Plan
 
-1. Backend `main.mo` güncelle:
-   - `UserRecord` tipine `location: Text` ve `viewCount: Nat` ekle
-   - `userRecordLocations` ve `userRecordViewCounts` map'leri ekle (ya da UserRecord'u güncelle)
-   - `updateRecordData` fonksiyonu ekle
-   - `updateRecordLocation` fonksiyonu ekle
-   - `deleteRecord` fonksiyonu ekle
-   - `incrementViewCount` fonksiyonu ekle (herkese açık query/shared)
-   - `getRecordViewCount` fonksiyonu ekle
-
-2. Frontend `backend.d.ts` güncelle (generate_motoko_code ile otomatik)
-
-3. Frontend RecordCard güncelle:
-   - Düzenleme kaydetme: `updateRecordData` çağır
-   - Konum kaydetme: `updateRecordLocation` çağır
-   - Silme: `deleteRecord` çağır
-   - localStorage fallback kalsın
-
-4. Frontend InquiryScreen güncelle:
-   - QR scan ve kod araması sonrası `incrementViewCount` çağır
-   - Sonuç kartında `record.viewCount` göster
-
-5. Frontend MyRecordsTab: silme sonrası query invalidate
+1. RecordCard.tsx: versiyon geçmişi dialog'una "Geri Yükle" butonu ekle -- seçilen versiyonu editValues'a yükleyip dialog'u aç
+2. RecordCard.tsx: handlePrint fonksiyonunu geliştir -- tüm kategori alanlarını HTML'e ekle
+3. InquiryScreen.tsx: QR tarama sonuç kartına detay alanları ekle (yas/iliski, tur/renk, marka/seriNo vb.)
+4. MyRecordsTab.tsx: toplam viewCount istatistiği footer'da göster

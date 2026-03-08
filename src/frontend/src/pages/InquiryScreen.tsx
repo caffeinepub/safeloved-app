@@ -1138,6 +1138,128 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                                 </a>
                               </div>
                             )}
+
+                            {/* Record details */}
+                            <div className="space-y-2 text-sm">
+                              {qrRecord.recordData.__kind__ === "insan" && (
+                                <>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.age}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.insan.yas.toString()}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.relationship}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.insan.iliski}
+                                    </span>
+                                  </div>
+                                  {qrRecord.recordData.insan.aciklama && (
+                                    <div className="p-2 bg-muted/50 rounded">
+                                      <span className="text-muted-foreground">
+                                        {t.description}:
+                                      </span>
+                                      <p className="mt-1">
+                                        {qrRecord.recordData.insan.aciklama}
+                                      </p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {qrRecord.recordData.__kind__ === "hayvan" && (
+                                <>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.species}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.hayvan.tur}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.color}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.hayvan.renk}
+                                    </span>
+                                  </div>
+                                  {qrRecord.recordData.hayvan.notlar && (
+                                    <div className="p-2 bg-muted/50 rounded">
+                                      <span className="text-muted-foreground">
+                                        {t.notes}:
+                                      </span>
+                                      <p className="mt-1">
+                                        {qrRecord.recordData.hayvan.notlar}
+                                      </p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {qrRecord.recordData.__kind__ === "esya" && (
+                                <>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.brand}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.esya.marka}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.serialNumber}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.esya.seriNo}
+                                    </span>
+                                  </div>
+                                  {qrRecord.recordData.esya.aciklama && (
+                                    <div className="p-2 bg-muted/50 rounded">
+                                      <span className="text-muted-foreground">
+                                        {t.description}:
+                                      </span>
+                                      <p className="mt-1">
+                                        {qrRecord.recordData.esya.aciklama}
+                                      </p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {qrRecord.recordData.__kind__ === "arac" && (
+                                <>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.brand}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.arac.marka}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.model}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.arac.model}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">
+                                      {t.color}:
+                                    </span>
+                                    <span className="font-medium">
+                                      {qrRecord.recordData.arac.renk}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       )}
