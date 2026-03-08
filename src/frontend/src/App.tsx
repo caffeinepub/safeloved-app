@@ -178,20 +178,42 @@ function BackendStatusDot() {
 
 // --- Backend maintenance banner ---
 function BackendBanner() {
-  const { status, countdown } = useBackendHealth();
+  const { status, countdown, checkHealth } = useBackendHealth();
   const { t } = useLanguage();
+  const [dismissed, setDismissed] = useState(false);
 
-  if (status !== "offline") return null;
+  // Reset dismissed when status changes to offline again
+  useEffect(() => {
+    if (status === "online") setDismissed(false);
+  }, [status]);
+
+  if (status !== "offline" || dismissed) return null;
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[100] bg-yellow-500 text-black px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium shadow-lg"
+      className="fixed top-0 left-0 right-0 z-[100] bg-yellow-500 text-black px-4 py-2 flex items-center justify-between gap-3 text-sm font-medium shadow-lg"
       data-ocid="backend.error_state"
     >
-      <span>{t.backendOffline}</span>
-      <span className="opacity-70">
-        {t.retryingIn} {countdown}s
+      <span className="flex-1 text-center">
+        {t.backendOffline} &mdash; {t.retryingIn} {countdown}s
       </span>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => checkHealth()}
+          className="text-xs underline opacity-80 hover:opacity-100"
+        >
+          {t.retryNow ?? "Şimdi Dene"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          className="opacity-70 hover:opacity-100"
+          title="Kapat"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -362,17 +384,52 @@ function NotificationPrompt() {
   );
 }
 
+// --- SafeLoved SVG Logo ---
+function SafeLovedLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 300 100"
+      className={className}
+      role="img"
+      aria-label="SafeLoved"
+    >
+      <title>SafeLoved</title>
+      {/* Shield icon */}
+      <path
+        d="M28 14 L48 20 L48 42 Q48 58 28 66 Q8 58 8 42 L8 20 Z"
+        fill="white"
+        fillOpacity="0.95"
+      />
+      {/* Heart inside shield */}
+      <path
+        d="M28 52 Q18 44 18 37 Q18 31 24 31 Q26 31 28 34 Q30 31 32 31 Q38 31 38 37 Q38 44 28 52Z"
+        fill="#ff6b9d"
+      />
+      {/* SafeLoved text */}
+      <text
+        x="60"
+        y="62"
+        fontFamily="'Segoe UI', Arial, sans-serif"
+        fontWeight="700"
+        fontSize="38"
+        fill="white"
+        fillOpacity="0.97"
+        letterSpacing="-1"
+      >
+        SafeLoved
+      </text>
+    </svg>
+  );
+}
+
 // --- Splash screen ---
 function SplashScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-accent to-secondary">
       <div className="flex flex-col items-center gap-6">
         <div className="animate-pulse">
-          <img
-            src="/assets/generated/safeloved-logo-new-transparent.dim_300x100.png"
-            alt="SafeLoved"
-            className="h-20 w-auto drop-shadow-2xl"
-          />
+          <SafeLovedLogo className="h-20 w-auto drop-shadow-2xl" />
         </div>
         <div className="flex gap-2">
           <div className="w-2 h-2 rounded-full bg-white/80 animate-bounce [animation-delay:-0.3s]" />

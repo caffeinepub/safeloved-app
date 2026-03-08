@@ -272,3 +272,31 @@ export function useGetRecordByUniqueCode() {
     },
   });
 }
+
+export function useGenerateShareLink() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (recordId: string) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.generateShareableLink(recordId);
+      } catch (error: any) {
+        throw new Error(getErrorMessage(error));
+      }
+    },
+  });
+}
+
+export function useGetRecordByShareableLink() {
+  const { actor } = useActor();
+  return useMutation({
+    mutationFn: async (linkId: string) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.getRecordByShareableLink(linkId);
+      } catch (error: any) {
+        throw new Error(getErrorMessage(error));
+      }
+    },
+  });
+}

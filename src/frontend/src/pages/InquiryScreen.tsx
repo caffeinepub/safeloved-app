@@ -13,7 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useGetRecordByUniqueCode } from "@/hooks/useQueries";
+import {
+  useGetRecordByShareableLink,
+  useGetRecordByUniqueCode,
+} from "@/hooks/useQueries";
 import {
   decodeDualPurposeData,
   getDisplayText,
@@ -39,6 +42,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { UserRecord } from "../backend";
+import CategoryIcon from "../components/CategoryIcon";
 import { useQRScanner } from "../qr-code/useQRScanner";
 
 interface ISpeechRecognition extends EventTarget {
@@ -143,7 +147,7 @@ function getPhoto(uniqueCode: string): string | null {
 }
 
 export default function InquiryScreen({ onBack }: InquiryScreenProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchCode, setSearchCode] = useState("");
   const [activeTab, setActiveTab] = useState("code");
   const [record, setRecord] = useState<UserRecord | null>(null);
@@ -161,7 +165,10 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
 
+  const [qrRecord, setQrRecord] = useState<UserRecord | null>(null);
+
   const getRecordMutation = useGetRecordByUniqueCode();
+  const getRecordByShareableLink = useGetRecordByShareableLink();
 
   const {
     qrResults,
@@ -179,6 +186,29 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
     scanInterval: 100,
     maxResults: 1,
   });
+
+  // Auto-resolve share link from URL ?share= parameter on mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally runs once on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get("share");
+    if (shareId) {
+      getRecordByShareableLink
+        .mutateAsync(shareId)
+        .then((result) => {
+          if (result) {
+            setRecord(result);
+            updateScanAnalytics(result.uniqueCode);
+            toast.success(t.toasts.recordLoaded);
+          } else {
+            toast.error(t.recordNotFound);
+          }
+        })
+        .catch(() => {
+          toast.error(t.recordNotFound);
+        });
+    }
+  }, []);
 
   const handleCodeSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,6 +240,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
     setIsProcessingQR(false);
     setLastProcessedQR("");
     setRecord(null);
+    setQrRecord(null);
 
     if (
       window.AndroidInterface &&
@@ -239,6 +270,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
     setIsProcessingQR(false);
     setLastProcessedQR("");
     setQrDetectedFlash(false);
+    setQrRecord(null);
     await stopScanning();
     setTimeout(() => handleStartScanning(), 300);
   };
@@ -258,9 +290,21 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
       return;
     }
 
+    const langMap: Record<string, string> = {
+      tr: "tr-TR",
+      en: "en-US",
+      zh: "zh-CN",
+      es: "es-ES",
+      ar: "ar-SA",
+      hi: "hi-IN",
+      fr: "fr-FR",
+      ru: "ru-RU",
+      pt: "pt-BR",
+    };
+
     const recognition = new SpeechRecognitionClass();
     recognitionRef.current = recognition;
-    recognition.lang = "tr-TR";
+    recognition.lang = langMap[language] || "tr-TR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
@@ -335,18 +379,21 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
               .then((result) => {
                 if (result) {
                   setRecord(result);
+                  setQrRecord(result);
                   updateScanAnalytics(result.uniqueCode);
                   addScanHistory(uniqueCode);
                   setScanHistory(getScanHistory());
                   toast.success(t.toasts.recordLoaded);
                 } else {
                   setRecord(null);
+                  setQrRecord(null);
                   setShowNotFoundDialog(true);
                   toast.error(t.recordNotFound);
                 }
               })
               .catch(() => {
                 setRecord(null);
+                setQrRecord(null);
                 setShowNotFoundDialog(true);
                 toast.error(t.recordNotFound);
               })
@@ -397,22 +444,6 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
   useEffect(() => {
     if (!isActive) setIsProcessingQR(false);
   }, [isActive]);
-
-  const getCategoryIcon = () => {
-    if (!record) return "";
-    switch (record.category) {
-      case "insan":
-        return "/assets/generated/insan-icon-transparent.dim_64x64.png";
-      case "hayvan":
-        return "/assets/generated/hayvan-icon-transparent.dim_64x64.png";
-      case "esya":
-        return "/assets/generated/esya-icon-transparent.dim_64x64.png";
-      case "arac":
-        return "/assets/generated/arac-icon-transparent.dim_64x64.png";
-      default:
-        return "";
-    }
-  };
 
   const getCategoryName = () => {
     if (!record) return "";
@@ -468,6 +499,63 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
         return {
           person: record.recordData.arac.contactPerson,
           info: record.recordData.arac.contactInfo,
+        };
+      default:
+        return { person: "", info: "" };
+    }
+  };
+
+  const getCategoryNameForRecord = (rec: UserRecord) => {
+    switch (rec.category) {
+      case "insan":
+        return t.person;
+      case "hayvan":
+        return t.animal;
+      case "esya":
+        return t.item;
+      case "arac":
+        return t.vehicle;
+      default:
+        return "";
+    }
+  };
+
+  const getRecordTitleForRecord = (rec: UserRecord) => {
+    switch (rec.recordData.__kind__) {
+      case "insan":
+        return rec.recordData.insan.adSoyad;
+      case "hayvan":
+        return rec.recordData.hayvan.ad;
+      case "esya":
+        return rec.recordData.esya.esyaAdi;
+      case "arac":
+        return rec.recordData.arac.plaka;
+      default:
+        return t.recordInquiry;
+    }
+  };
+
+  const getContactInfoForRecord = (rec: UserRecord) => {
+    switch (rec.recordData.__kind__) {
+      case "insan":
+        return {
+          person: rec.recordData.insan.contactPerson,
+          info: rec.recordData.insan.contactInfo,
+        };
+      case "hayvan":
+        return {
+          person: rec.recordData.hayvan.contactPerson,
+          info: rec.recordData.hayvan.contactInfo,
+        };
+      case "esya":
+        return {
+          person: rec.recordData.esya.contactPerson,
+          info: rec.recordData.esya.contactInfo,
+        };
+      case "arac":
+        return {
+          person: rec.recordData.arac.contactPerson,
+          info: rec.recordData.arac.contactInfo,
         };
       default:
         return { person: "", info: "" };
@@ -604,10 +692,9 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                         >
                           <CardHeader>
                             <div className="flex items-center gap-4">
-                              <img
-                                src={getCategoryIcon()}
-                                alt={getCategoryName()}
-                                className="w-16 h-16"
+                              <CategoryIcon
+                                category={record.category}
+                                className="w-16 h-16 object-contain"
                               />
                               <div>
                                 <CardTitle className="text-xl">
@@ -949,6 +1036,86 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                           </p>
                         </CardContent>
                       </Card>
+
+                      {/* QR scan result */}
+                      {qrRecord && (
+                        <Card
+                          className="border-2 border-primary"
+                          data-ocid="inquiry.card"
+                        >
+                          <CardHeader>
+                            <div className="flex items-center gap-4">
+                              <CategoryIcon
+                                category={qrRecord.category}
+                                className="w-16 h-16 object-contain"
+                              />
+                              <div>
+                                <CardTitle className="text-xl">
+                                  {getRecordTitleForRecord(qrRecord)}
+                                </CardTitle>
+                                <p className="text-sm text-muted-foreground">
+                                  {getCategoryNameForRecord(qrRecord)}
+                                </p>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Photo */}
+                            {getPhoto(qrRecord.uniqueCode) && (
+                              <img
+                                src={getPhoto(qrRecord.uniqueCode)!}
+                                alt={t.photoLabel}
+                                className="w-full max-h-40 object-cover rounded-lg border border-border"
+                              />
+                            )}
+
+                            {/* Contact */}
+                            <div className="p-4 bg-gradient-to-br from-accent/10 to-secondary/10 rounded-lg border border-accent/20">
+                              <div className="flex items-start gap-3">
+                                <Phone className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">
+                                      {t.contactPersonLabel}
+                                    </p>
+                                    <p className="text-base font-semibold">
+                                      {getContactInfoForRecord(qrRecord).person}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">
+                                      {t.contactInfoLabel}
+                                    </p>
+                                    <p className="text-base font-semibold">
+                                      {getContactInfoForRecord(qrRecord).info}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Location */}
+                            {getLocation(qrRecord.uniqueCode) && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                <span className="flex-1 truncate text-muted-foreground">
+                                  {getLocation(qrRecord.uniqueCode)}
+                                </span>
+                                <a
+                                  href={`https://maps.google.com/?q=${encodeURIComponent(getLocation(qrRecord.uniqueCode)!)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  data-ocid="inquiry.link"
+                                  className="flex items-center gap-1 text-primary hover:underline text-xs flex-shrink-0"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  {t.viewOnMap}
+                                </a>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
                     </>
                   )}
                 </TabsContent>

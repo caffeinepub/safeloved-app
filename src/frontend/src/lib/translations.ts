@@ -67,6 +67,16 @@ export interface Translations {
   noVersionHistory: string;
   version: string;
 
+  // Delete Record
+  deleteRecord: string;
+  confirmDelete: string;
+  deleteSuccess: string;
+
+  // GPS Location
+  getMyLocation: string;
+  locationDetecting: string;
+  locationError: string;
+
   // Scan Count
   scanCount: string;
   lastScanned: string;
@@ -89,6 +99,7 @@ export interface Translations {
   backendOffline: string;
   backendChecking: string;
   retryingIn: string;
+  retryNow: string;
 
   // Filter
   filterAll: string;
@@ -274,6 +285,16 @@ export interface Translations {
   shareLinkCopied: string;
   copyShareLink: string;
 
+  // Share Record
+  shareRecord: string;
+  shareLink: string;
+  shareHint: string;
+
+  // Stats
+  statsTitle: string;
+  totalRecords: string;
+  totalViews: string;
+
   // Placeholders
   placeholders: {
     fullName: string;
@@ -365,6 +386,17 @@ export const translations: Record<Language, Translations> = {
     noVersionHistory: "Versiyon geçmişi yok",
     version: "Versiyon",
 
+    // Delete Record
+    deleteRecord: "Kaydı Sil",
+    confirmDelete:
+      "Bu kaydı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    deleteSuccess: "Kayıt başarıyla silindi",
+
+    // GPS Location
+    getMyLocation: "Konumumu Al",
+    locationDetecting: "Konum alınıyor...",
+    locationError: "Konum alınamadı",
+
     // Scan Count
     scanCount: "Görüntülenme",
     lastScanned: "Son Tarama",
@@ -386,10 +418,10 @@ export const translations: Record<Language, Translations> = {
 
     // Backend Status
     backendOnline: "Sunucu çevrimiçi",
-    backendOffline:
-      "⚠️ Sunucu şu anda bakımda. Otomatik olarak yeniden deneniyor...",
+    backendOffline: "Bağlantı kurulamıyor, yeniden deneniyor",
     backendChecking: "Sunucu kontrol ediliyor...",
-    retryingIn: "Yeniden deneniyor:",
+    retryingIn: "saniye içinde:",
+    retryNow: "Şimdi Dene",
 
     // Filter
     filterAll: "Tümü",
@@ -593,6 +625,16 @@ export const translations: Record<Language, Translations> = {
     shareLinkCopied: "Paylaşım linki kopyalandı!",
     copyShareLink: "Linki Kopyala",
 
+    // Share Record
+    shareRecord: "Kaydı Paylaş",
+    shareLink: "Paylaşım Linki Oluştur",
+    shareHint: "Bu link ile kayıt bilgileri paylaşılabilir",
+
+    // Stats
+    statsTitle: "İstatistikler",
+    totalRecords: "Toplam Kayıt",
+    totalViews: "Toplam Görüntülenme",
+
     // Placeholders
     placeholders: {
       fullName: "Örn: Ahmet Yılmaz",
@@ -665,6 +707,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "Version History",
     noVersionHistory: "No version history",
     version: "Version",
+    deleteRecord: "Delete Record",
+    confirmDelete:
+      "Are you sure you want to delete this record? This action cannot be undone.",
+    deleteSuccess: "Record deleted successfully",
+    getMyLocation: "Get My Location",
+    locationDetecting: "Detecting location...",
+    locationError: "Could not get location",
     scanCount: "Views",
     lastScanned: "Last Scanned",
     neverScanned: "Never scanned",
@@ -677,10 +726,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "Allow",
     dismissNotification: "Dismiss",
     backendOnline: "Server online",
-    backendOffline:
-      "⚠️ Server is currently under maintenance. Automatically retrying...",
+    backendOffline: "Connection failed, retrying",
     backendChecking: "Checking server...",
-    retryingIn: "Retrying in:",
+    retryingIn: "in",
+    retryNow: "Retry Now",
     filterAll: "All",
     filterPerson: "Person",
     filterAnimal: "Animal",
@@ -838,6 +887,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "An error occurred while generating share link",
     shareLinkCopied: "Share link copied!",
     copyShareLink: "Copy Link",
+
+    // Share Record
+    shareRecord: "Share Record",
+    shareLink: "Generate Share Link",
+    shareHint: "Record information can be shared with this link",
+
+    // Stats
+    statsTitle: "Statistics",
+    totalRecords: "Total Records",
+    totalViews: "Total Views",
+
     placeholders: {
       fullName: "e.g., John Doe",
       age: "e.g., 25",
@@ -907,6 +967,12 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "版本历史",
     noVersionHistory: "无版本历史",
     version: "版本",
+    deleteRecord: "删除记录",
+    confirmDelete: "您确定要删除此记录吗？此操作无法撤消。",
+    deleteSuccess: "记录已成功删除",
+    getMyLocation: "获取我的位置",
+    locationDetecting: "正在获取位置...",
+    locationError: "无法获取位置",
     scanCount: "查看次数",
     lastScanned: "最后扫描",
     neverScanned: "从未扫描",
@@ -917,9 +983,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "允许",
     dismissNotification: "关闭",
     backendOnline: "服务器在线",
-    backendOffline: "⚠️ 服务器正在维护。自动重试中...",
+    backendOffline: "连接失败，正在重试",
     backendChecking: "检查服务器...",
-    retryingIn: "重试倒计时:",
+    retryingIn: "秒后:",
+    retryNow: "立即重试",
     filterAll: "全部",
     filterPerson: "人员",
     filterAnimal: "动物",
@@ -1070,6 +1137,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "生成分享链接时发生错误",
     shareLinkCopied: "分享链接已复制！",
     copyShareLink: "复制链接",
+
+    // Share Record
+    shareRecord: "分享记录",
+    shareLink: "生成分享链接",
+    shareHint: "可通过此链接分享记录信息",
+
+    // Stats
+    statsTitle: "统计",
+    totalRecords: "总记录",
+    totalViews: "总浏览量",
+
     placeholders: {
       fullName: "例如：张三",
       age: "例如：25",
@@ -1139,6 +1217,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "Historial de Versiones",
     noVersionHistory: "Sin historial de versiones",
     version: "Versión",
+    deleteRecord: "Eliminar Registro",
+    confirmDelete:
+      "¿Está seguro de que desea eliminar este registro? Esta acción no se puede deshacer.",
+    deleteSuccess: "Registro eliminado exitosamente",
+    getMyLocation: "Obtener Mi Ubicación",
+    locationDetecting: "Detectando ubicación...",
+    locationError: "No se pudo obtener la ubicación",
     scanCount: "Vistas",
     lastScanned: "Último Escaneo",
     neverScanned: "Nunca escaneado",
@@ -1151,10 +1236,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "Permitir",
     dismissNotification: "Cerrar",
     backendOnline: "Servidor en línea",
-    backendOffline:
-      "⚠️ El servidor está en mantenimiento. Reintentando automáticamente...",
+    backendOffline: "Error de conexión, reintentando",
     backendChecking: "Verificando servidor...",
-    retryingIn: "Reintentando en:",
+    retryingIn: "en",
+    retryNow: "Reintentar",
     filterAll: "Todos",
     filterPerson: "Persona",
     filterAnimal: "Animal",
@@ -1315,6 +1400,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "Ocurrió un error al generar el enlace para compartir",
     shareLinkCopied: "¡Enlace para compartir copiado!",
     copyShareLink: "Copiar Enlace",
+
+    // Share Record
+    shareRecord: "Compartir Registro",
+    shareLink: "Generar Enlace para Compartir",
+    shareHint: "La información del registro se puede compartir con este enlace",
+
+    // Stats
+    statsTitle: "Estadísticas",
+    totalRecords: "Total de Registros",
+    totalViews: "Total de Visualizaciones",
+
     placeholders: {
       fullName: "ej., Juan Pérez",
       age: "ej., 25",
@@ -1384,6 +1480,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "سجل الإصدارات",
     noVersionHistory: "لا يوجد سجل إصدارات",
     version: "إصدار",
+    deleteRecord: "حذف السجل",
+    confirmDelete:
+      "هل أنت متأكد أنك تريد حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.",
+    deleteSuccess: "تم حذف السجل بنجاح",
+    getMyLocation: "الحصول على موقعي",
+    locationDetecting: "جاري تحديد الموقع...",
+    locationError: "تعذر الحصول على الموقع",
     scanCount: "المشاهدات",
     lastScanned: "آخر مسح",
     neverScanned: "لم يُمسح أبداً",
@@ -1395,9 +1498,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "سماح",
     dismissNotification: "إغلاق",
     backendOnline: "الخادم متصل",
-    backendOffline: "⚠️ الخادم قيد الصيانة حالياً. إعادة المحاولة تلقائياً...",
+    backendOffline: "فشل الاتصال، إعادة المحاولة",
     backendChecking: "جاري التحقق من الخادم...",
-    retryingIn: "إعادة المحاولة في:",
+    retryingIn: "في",
+    retryNow: "حاول الآن",
     filterAll: "الكل",
     filterPerson: "شخص",
     filterAnimal: "حيوان",
@@ -1554,6 +1658,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "حدث خطأ أثناء إنشاء رابط المشاركة",
     shareLinkCopied: "تم نسخ رابط المشاركة!",
     copyShareLink: "نسخ الرابط",
+
+    // Share Record
+    shareRecord: "مشاركة السجل",
+    shareLink: "إنشاء رابط مشاركة",
+    shareHint: "يمكن مشاركة معلومات السجل من خلال هذا الرابط",
+
+    // Stats
+    statsTitle: "الإحصاءات",
+    totalRecords: "إجمالي السجلات",
+    totalViews: "إجمالي المشاهدات",
+
     placeholders: {
       fullName: "مثال: أحمد محمد",
       age: "مثال: 25",
@@ -1622,6 +1737,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "संस्करण इतिहास",
     noVersionHistory: "कोई संस्करण इतिहास नहीं",
     version: "संस्करण",
+    deleteRecord: "रिकॉर्ड हटाएं",
+    confirmDelete:
+      "क्या आप वाकई इस रिकॉर्ड को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+    deleteSuccess: "रिकॉर्ड सफलतापूर्वक हटाया गया",
+    getMyLocation: "मेरा स्थान प्राप्त करें",
+    locationDetecting: "स्थान का पता लगाया जा रहा है...",
+    locationError: "स्थान प्राप्त नहीं किया जा सका",
     scanCount: "दर्शन",
     lastScanned: "अंतिम स्कैन",
     neverScanned: "कभी स्कैन नहीं किया",
@@ -1634,10 +1756,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "अनुमति दें",
     dismissNotification: "बंद करें",
     backendOnline: "सर्वर ऑनलाइन",
-    backendOffline:
-      "⚠️ सर्वर वर्तमान में रखरखाव में है। स्वचालित रूप से पुनः प्रयास हो रहा है...",
+    backendOffline: "कनेक्शन विफल, पुनः प्रयास",
     backendChecking: "सर्वर जांच रहा है...",
-    retryingIn: "पुनः प्रयास में:",
+    retryingIn: "में:",
+    retryNow: "अभी प्रयास करें",
     filterAll: "सभी",
     filterPerson: "व्यक्ति",
     filterAnimal: "जानवर",
@@ -1794,6 +1916,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "शेयर लिंक बनाते समय एक त्रुटि हुई",
     shareLinkCopied: "शेयर लिंक कॉपी किया गया!",
     copyShareLink: "लिंक कॉपी करें",
+
+    // Share Record
+    shareRecord: "रिकॉर्ड शेयर करें",
+    shareLink: "शेयर लिंक बनाएं",
+    shareHint: "इस लिंक से रिकॉर्ड जानकारी साझा की जा सकती है",
+
+    // Stats
+    statsTitle: "आँकड़े",
+    totalRecords: "कुल रिकॉर्ड",
+    totalViews: "कुल दर्शन",
+
     placeholders: {
       fullName: "उदा., राज कुमार",
       age: "उदा., 25",
@@ -1864,6 +1997,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "Historique des Versions",
     noVersionHistory: "Aucun historique de version",
     version: "Version",
+    deleteRecord: "Supprimer l'Enregistrement",
+    confirmDelete:
+      "Êtes-vous sûr de vouloir supprimer cet enregistrement ? Cette action est irréversible.",
+    deleteSuccess: "Enregistrement supprimé avec succès",
+    getMyLocation: "Obtenir Ma Position",
+    locationDetecting: "Détection de la position...",
+    locationError: "Impossible d'obtenir la position",
     scanCount: "Vues",
     lastScanned: "Dernier Scan",
     neverScanned: "Jamais scanné",
@@ -1876,10 +2016,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "Autoriser",
     dismissNotification: "Fermer",
     backendOnline: "Serveur en ligne",
-    backendOffline:
-      "⚠️ Le serveur est actuellement en maintenance. Nouvelle tentative automatique...",
+    backendOffline: "Connexion échouée, nouvelle tentative",
     backendChecking: "Vérification du serveur...",
-    retryingIn: "Nouvelle tentative dans:",
+    retryingIn: "dans",
+    retryNow: "Réessayer",
     filterAll: "Tous",
     filterPerson: "Personne",
     filterAnimal: "Animal",
@@ -2046,6 +2186,18 @@ export const translations: Record<Language, Translations> = {
       "Une erreur s'est produite lors de la génération du lien de partage",
     shareLinkCopied: "Lien de partage copié!",
     copyShareLink: "Copier le Lien",
+
+    // Share Record
+    shareRecord: "Partager l'Enregistrement",
+    shareLink: "Générer un Lien de Partage",
+    shareHint:
+      "Les informations d'enregistrement peuvent être partagées avec ce lien",
+
+    // Stats
+    statsTitle: "Statistiques",
+    totalRecords: "Total des Enregistrements",
+    totalViews: "Total des Vues",
+
     placeholders: {
       fullName: "ex., Jean Dupont",
       age: "ex., 25",
@@ -2115,6 +2267,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "История Версий",
     noVersionHistory: "Нет истории версий",
     version: "Версия",
+    deleteRecord: "Удалить Запись",
+    confirmDelete:
+      "Вы уверены, что хотите удалить эту запись? Это действие нельзя отменить.",
+    deleteSuccess: "Запись успешно удалена",
+    getMyLocation: "Получить Моё Местоположение",
+    locationDetecting: "Определение местоположения...",
+    locationError: "Не удалось получить местоположение",
     scanCount: "Просмотры",
     lastScanned: "Последнее Сканирование",
     neverScanned: "Никогда не сканировалось",
@@ -2127,10 +2286,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "Разрешить",
     dismissNotification: "Закрыть",
     backendOnline: "Сервер онлайн",
-    backendOffline:
-      "⚠️ Сервер на техническом обслуживании. Автоматическая повторная попытка...",
+    backendOffline: "Нет соединения, повторная попытка",
     backendChecking: "Проверка сервера...",
-    retryingIn: "Повтор через:",
+    retryingIn: "через",
+    retryNow: "Попробовать",
     filterAll: "Все",
     filterPerson: "Человек",
     filterAnimal: "Животное",
@@ -2291,6 +2450,17 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "Произошла ошибка при создании ссылки для обмена",
     shareLinkCopied: "Ссылка для обмена скопирована!",
     copyShareLink: "Копировать Ссылку",
+
+    // Share Record
+    shareRecord: "Поделиться Записью",
+    shareLink: "Создать Ссылку для Обмена",
+    shareHint: "Информацию о записи можно поделиться по этой ссылке",
+
+    // Stats
+    statsTitle: "Статистика",
+    totalRecords: "Всего Записей",
+    totalViews: "Всего Просмотров",
+
     placeholders: {
       fullName: "напр., Иван Иванов",
       age: "напр., 25",
@@ -2359,6 +2529,13 @@ export const translations: Record<Language, Translations> = {
     versionHistory: "Histórico de Versões",
     noVersionHistory: "Sem histórico de versões",
     version: "Versão",
+    deleteRecord: "Excluir Registro",
+    confirmDelete:
+      "Tem certeza de que deseja excluir este registro? Esta ação não pode ser desfeita.",
+    deleteSuccess: "Registro excluído com sucesso",
+    getMyLocation: "Obter Minha Localização",
+    locationDetecting: "Detectando localização...",
+    locationError: "Não foi possível obter a localização",
     scanCount: "Visualizações",
     lastScanned: "Último Scan",
     neverScanned: "Nunca escaneado",
@@ -2371,10 +2548,10 @@ export const translations: Record<Language, Translations> = {
     allowNotifications: "Permitir",
     dismissNotification: "Fechar",
     backendOnline: "Servidor online",
-    backendOffline:
-      "⚠️ O servidor está em manutenção. Tentando reconectar automaticamente...",
+    backendOffline: "Conexão falhou, tentando reconectar",
     backendChecking: "Verificando servidor...",
-    retryingIn: "Tentando novamente em:",
+    retryingIn: "em",
+    retryNow: "Tentar Agora",
     filterAll: "Todos",
     filterPerson: "Pessoa",
     filterAnimal: "Animal",
@@ -2535,6 +2712,18 @@ export const translations: Record<Language, Translations> = {
     shareLinkError: "Ocorreu um erro ao gerar o link de compartilhamento",
     shareLinkCopied: "Link de compartilhamento copiado!",
     copyShareLink: "Copiar Link",
+
+    // Share Record
+    shareRecord: "Compartilhar Registro",
+    shareLink: "Gerar Link de Compartilhamento",
+    shareHint:
+      "As informações do registro podem ser compartilhadas com este link",
+
+    // Stats
+    statsTitle: "Estatísticas",
+    totalRecords: "Total de Registros",
+    totalViews: "Total de Visualizações",
+
     placeholders: {
       fullName: "ex., João Silva",
       age: "ex., 25",

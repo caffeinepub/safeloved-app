@@ -1,3 +1,13 @@
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useGenerateShareLink } from "@/hooks/useQueries";
 import { generateEnhancedQRCode } from "@/lib/qrCodeGenerator";
 import {
   Check,
@@ -20,16 +31,22 @@ import {
   Eye,
   History,
   Image,
+  Loader2,
   MapPin,
+  Navigation,
   Phone,
   Printer,
+  Share2,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { UserRecord } from "../backend";
+import CategoryIcon from "./CategoryIcon";
 
 interface RecordCardProps {
   record: UserRecord;
+  onDelete?: (uniqueCode: string) => void;
 }
 
 interface ScanData {
@@ -113,8 +130,9 @@ function saveOverrides(
   }
 }
 
-export default function RecordCard({ record }: RecordCardProps) {
+export default function RecordCard({ record, onDelete }: RecordCardProps) {
   const { t } = useLanguage();
+  const generateShareLink = useGenerateShareLink();
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(true);
@@ -132,8 +150,10 @@ export default function RecordCard({ record }: RecordCardProps) {
   );
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showVersionDialog, setShowVersionDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [editLocation, setEditLocation] = useState("");
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -163,21 +183,6 @@ export default function RecordCard({ record }: RecordCardProps) {
     record.qrEncodedData.displayText,
     t.toasts.qrCodeGenerationError,
   ]);
-
-  const getCategoryIcon = () => {
-    switch (record.category) {
-      case "insan":
-        return "/assets/generated/insan-icon-transparent.dim_64x64.png";
-      case "hayvan":
-        return "/assets/generated/hayvan-icon-transparent.dim_64x64.png";
-      case "esya":
-        return "/assets/generated/esya-icon-transparent.dim_64x64.png";
-      case "arac":
-        return "/assets/generated/arac-icon-transparent.dim_64x64.png";
-      default:
-        return "";
-    }
-  };
 
   const getCategoryName = () => {
     switch (record.category) {
@@ -355,6 +360,44 @@ export default function RecordCard({ record }: RecordCardProps) {
     toast.success(t.success);
   };
 
+  // Delete record: clear all localStorage data for this record
+  const handleDeleteConfirm = () => {
+    const code = record.uniqueCode;
+    try {
+      localStorage.removeItem(`safeloved_photo_${code}`);
+      localStorage.removeItem(`safeloved_location_${code}`);
+      localStorage.removeItem(`safeloved_versions_${code}`);
+      localStorage.removeItem(`safeloved_record_overrides_${code}`);
+      localStorage.removeItem(`safeloved_scan_${code}`);
+    } catch {
+      /* ignore */
+    }
+    setShowDeleteDialog(false);
+    toast.success(t.deleteSuccess);
+    onDelete?.(code);
+  };
+
+  // GPS location detection
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error(t.locationError);
+      return;
+    }
+    setIsDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = `${pos.coords.latitude},${pos.coords.longitude}`;
+        setEditLocation(coords);
+        setIsDetectingLocation(false);
+      },
+      () => {
+        toast.error(t.locationError);
+        setIsDetectingLocation(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true },
+    );
+  };
+
   // B9: PDF export
   const handlePrint = () => {
     const contactInfo = getContactInfo();
@@ -419,10 +462,9 @@ export default function RecordCard({ record }: RecordCardProps) {
     <Card className="hover:shadow-lg transition-shadow dark:bg-card">
       <CardHeader>
         <div className="flex items-center gap-4">
-          <img
-            src={getCategoryIcon()}
-            alt={getCategoryName()}
-            className="w-12 h-12"
+          <CategoryIcon
+            category={record.category}
+            className="w-12 h-12 object-contain"
           />
           <div className="flex-1">
             <CardTitle className="text-lg">{getRecordTitle()}</CardTitle>
@@ -713,6 +755,47 @@ export default function RecordCard({ record }: RecordCardProps) {
               {t.versionHistory}
             </Button>
           )}
+          {/* Share button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                const linkId = await generateShareLink.mutateAsync(
+                  record.uniqueCode,
+                );
+                if (linkId) {
+                  const url = `${window.location.origin}?share=${linkId}`;
+                  await navigator.clipboard.writeText(url);
+                  toast.success(t.shareLinkCopied);
+                } else {
+                  toast.error(t.shareLinkError);
+                }
+              } catch {
+                toast.error(t.shareLinkError);
+              }
+            }}
+            disabled={generateShareLink.isPending}
+            data-ocid="record.secondary_button"
+          >
+            {generateShareLink.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Share2 className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            {t.shareRecord}
+          </Button>
+          {/* Delete button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDeleteDialog(true)}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            data-ocid="record.delete_button"
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            {t.deleteRecord}
+          </Button>
         </div>
       </CardContent>
 
@@ -749,13 +832,36 @@ export default function RecordCard({ record }: RecordCardProps) {
               <Label htmlFor="edit-location" className="text-xs">
                 {t.locationLabel}
               </Label>
-              <Input
-                id="edit-location"
-                value={editLocation}
-                onChange={(e) => setEditLocation(e.target.value)}
-                placeholder="Adres veya koordinat..."
-                data-ocid="record.input"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="edit-location"
+                  value={editLocation}
+                  onChange={(e) => setEditLocation(e.target.value)}
+                  placeholder="Adres veya koordinat..."
+                  className="flex-1"
+                  data-ocid="record.input"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGetLocation}
+                  disabled={isDetectingLocation}
+                  title={t.getMyLocation}
+                  data-ocid="record.location_button"
+                >
+                  {isDetectingLocation ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Navigation className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+              {isDetectingLocation && (
+                <p className="text-xs text-muted-foreground">
+                  {t.locationDetecting}
+                </p>
+              )}
             </div>
           </div>
           <div className="flex gap-2 pt-2">
@@ -826,6 +932,31 @@ export default function RecordCard({ record }: RecordCardProps) {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent data-ocid="record.dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              {t.deleteRecord}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t.confirmDelete}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-ocid="record.cancel_button">
+              {t.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-ocid="record.confirm_button"
+            >
+              {t.deleteRecord}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

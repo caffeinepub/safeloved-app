@@ -7,21 +7,9 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface EsyaKaydi {
-    marka: string;
-    contactInfo: string;
-    esyaAdi: string;
-    contactPerson: string;
-    seriNo: string;
-    aciklama: string;
-}
-export interface AracKaydi {
-    marka: string;
-    model: string;
-    contactInfo: string;
-    renk: string;
-    contactPerson: string;
-    plaka: string;
+export interface UserProfile {
+    userCode: string;
+    username: string;
 }
 export type Time = bigint;
 export interface HayvanKaydi {
@@ -45,12 +33,6 @@ export type RecordData = {
     __kind__: "hayvan";
     hayvan: HayvanKaydi;
 };
-export interface QREncodedData {
-    contactInfo: string;
-    displayText: string;
-    contactPerson: string;
-    uniqueCode: string;
-}
 export interface InsanKaydi {
     yas: bigint;
     contactInfo: string;
@@ -58,6 +40,14 @@ export interface InsanKaydi {
     iliski: string;
     aciklama: string;
     adSoyad: string;
+}
+export interface EsyaKaydi {
+    marka: string;
+    contactInfo: string;
+    esyaAdi: string;
+    contactPerson: string;
+    seriNo: string;
+    aciklama: string;
 }
 export interface UserRecord {
     userCode: string;
@@ -68,9 +58,19 @@ export interface UserRecord {
     uniqueCode: string;
     category: RecordCategory;
 }
-export interface UserProfile {
-    userCode: string;
-    username: string;
+export interface QREncodedData {
+    contactInfo: string;
+    displayText: string;
+    contactPerson: string;
+    uniqueCode: string;
+}
+export interface AracKaydi {
+    marka: string;
+    model: string;
+    contactInfo: string;
+    renk: string;
+    contactPerson: string;
+    plaka: string;
 }
 export enum RecordCategory {
     arac = "arac",

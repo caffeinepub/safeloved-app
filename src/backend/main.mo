@@ -1,46 +1,36 @@
 import Map "mo:core/Map";
-import Text "mo:core/Text";
-import Time "mo:core/Time";
-import Int "mo:core/Int";
+import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Array "mo:core/Array";
+import Time "mo:core/Time";
+import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 import Nat "mo:core/Nat";
-import Principal "mo:core/Principal";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Iter "mo:core/Iter";
-
-
+import MixinStorage "blob-storage/Mixin";
 
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
+  include MixinStorage();
 
-  // Manual role tracking to bypass admin-only assignRole restriction
   let manualUserRoles = Map.empty<Principal, Bool>();
 
   func ensureUserAccess(caller : Principal) {
-    // Check if caller already has a role in the access control system
     let currentRole = AccessControl.getUserRole(accessControlState, caller);
-
     switch (currentRole) {
       case (#guest) {
-        // Since AccessControl.assignRole requires admin privileges,
-        // we track user roles manually for self-assignment
-        // This allows any caller (including anonymous) to self-assign #user role
         if (not manualUserRoles.containsKey(caller)) {
           manualUserRoles.add(caller, true);
         };
       };
       case (#user) {
-        // Already has user role, ensure it's tracked
         if (not manualUserRoles.containsKey(caller)) {
           manualUserRoles.add(caller, true);
         };
       };
-      case (#admin) {
-        // Admin already has all permissions
-      };
+      case (#admin) {};
     };
   };
 
@@ -50,7 +40,6 @@ actor {
       case (#admin) { true };
       case (#user) { true };
       case (#guest) {
-        // Check manual role assignment
         switch (manualUserRoles.get(caller)) {
           case (?true) { true };
           case (_) { false };
@@ -168,10 +157,8 @@ actor {
     if (now < 0) { return null };
     let time = now.toNat();
     if (time == 0) { return null };
-
     let shiftAmount = time % 17;
     let shiftedTime = time * 2 ** Nat.min(shiftAmount, 63);
-
     let randomIndex1 = (shiftedTime + 13) % charsetSize;
     let randomIndex2 = (shiftedTime + 29) % charsetSize;
     let randomIndex3 = (shiftedTime + 47) % charsetSize;
@@ -180,17 +167,7 @@ actor {
     let randomIndex6 = (shiftedTime + 101) % charsetSize;
     let randomIndex7 = (shiftedTime + 127) % charsetSize;
     let randomIndex8 = (shiftedTime + 151) % charsetSize;
-
-    ?[
-      randomIndex1,
-      randomIndex2,
-      randomIndex3,
-      randomIndex4,
-      randomIndex5,
-      randomIndex6,
-      randomIndex7,
-      randomIndex8,
-    ];
+    ?[randomIndex1, randomIndex2, randomIndex3, randomIndex4, randomIndex5, randomIndex6, randomIndex7, randomIndex8];
   };
 
   func generateUniqueCode() : Text {
@@ -198,20 +175,8 @@ actor {
       case (null) { "" };
       case (?indices) {
         if (indices.size() != 8) { return "" };
-
-        let firstPart = Text.fromArray([
-          chars[indices[0]],
-          chars[indices[1]],
-          chars[indices[2]],
-          chars[indices[3]],
-        ]);
-
-        let secondPart = Text.fromArray([
-          chars[indices[4]],
-          chars[indices[5]],
-          chars[indices[6]],
-          chars[indices[7]],
-        ]);
+        let firstPart = Text.fromArray([chars[indices[0]], chars[indices[1]], chars[indices[2]], chars[indices[3]]]);
+        let secondPart = Text.fromArray([chars[indices[4]], chars[indices[5]], chars[indices[6]], chars[indices[7]]]);
         firstPart # " " # secondPart;
       };
     };
@@ -222,19 +187,8 @@ actor {
       case (null) { "" };
       case (?indices) {
         if (indices.size() != 8) { return "" };
-
-        let firstPart = Text.fromArray([
-          chars[indices[0]],
-          chars[indices[1]],
-          chars[indices[2]],
-          chars[indices[3]],
-        ]);
-        let secondPart = Text.fromArray([
-          chars[indices[4]],
-          chars[indices[5]],
-          chars[indices[6]],
-          chars[indices[7]],
-        ]);
+        let firstPart = Text.fromArray([chars[indices[0]], chars[indices[1]], chars[indices[2]], chars[indices[3]]]);
+        let secondPart = Text.fromArray([chars[indices[4]], chars[indices[5]], chars[indices[6]], chars[indices[7]]]);
         firstPart # " " # secondPart;
       };
     };
@@ -245,9 +199,7 @@ actor {
     if (not hasUserAccess(caller)) {
       Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
     };
-
     var code = generateUniqueUserCode();
-
     var attemptCount = 0;
     while ((userCodes.containsKey(code) or code == "") and attemptCount < 50) {
       code := generateUniqueUserCode();
@@ -256,24 +208,15 @@ actor {
     if (attemptCount >= 50) {
       code := generateUniqueUserCode() # "X";
     };
-
     userCodes.add(code, Time.now());
-    let userProfile = {
-      username;
-      userCode = code;
-    };
+    let userProfile = { username; userCode = code };
     userProfiles.add(caller, userProfile);
     userCodeToProfile.add(code, userProfile);
     userCodeToPrincipal.add(code, caller);
-
     ?userProfile;
   };
 
-  func generateQREncodedData(
-    uniqueCode : Text,
-    contactPerson : Text,
-    contactInfo : Text,
-  ) : QREncodedData {
+  func generateQREncodedData(uniqueCode : Text, contactPerson : Text, contactInfo : Text) : QREncodedData {
     {
       displayText = "İletişim için Google Play Store'den SafeLoved Uygulamasını İndirin ve QR Kodu Sorgulama Ekranına Okutun";
       uniqueCode;
@@ -301,7 +244,7 @@ actor {
         };
       };
       case (null) {
-        return null;
+        userCodeToPrincipal.add(userCode, caller);
       };
     };
 
@@ -310,11 +253,7 @@ actor {
       return null;
     };
 
-    let qrEncodedData = generateQREncodedData(
-      uniqueCode,
-      contactPerson,
-      contactInfo,
-    );
+    let qrEncodedData = generateQREncodedData(uniqueCode, contactPerson, contactInfo);
 
     let username = switch (userCodeToProfile.get(userCode)) {
       case (?profile) { profile.username };
@@ -350,7 +289,6 @@ actor {
     if (not hasUserAccess(caller)) {
       Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
     };
-
     switch (userCodeToPrincipal.get(userCode)) {
       case (?owner) {
         if (not (AccessControl.isAdmin(accessControlState, caller)) and caller != owner) {
@@ -378,11 +316,8 @@ actor {
     if (not hasUserAccess(caller)) {
       Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
     };
-
     switch (userRecords.get(recordId)) {
-      case (null) {
-        return null;
-      };
+      case (null) { return null };
       case (?record) {
         switch (userCodeToPrincipal.get(record.userCode)) {
           case (?owner) {
@@ -390,13 +325,10 @@ actor {
               Runtime.trap("Yetkili kullanıcılar sadece kendi kayıtları için paylaşım linki oluşturabilirler.");
             };
           };
-          case (null) {
-            return null;
-          };
+          case (null) { return null };
         };
       };
     };
-
     let linkId = generateUniqueLinkId();
     shareableLinks.add(linkId, recordId);
     ?linkId;
@@ -408,9 +340,7 @@ actor {
 
   public query ({ caller }) func getRecordByShareableLink(linkId : Text) : async ?UserRecord {
     switch (shareableLinks.get(linkId)) {
-      case (?recordId) {
-        userRecords.get(recordId);
-      };
+      case (?recordId) { userRecords.get(recordId) };
       case (null) { null };
     };
   };

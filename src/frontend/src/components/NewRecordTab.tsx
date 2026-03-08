@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useState } from "react";
+import CategoryIcon from "./CategoryIcon";
 import AracForm from "./forms/AracForm";
 import EsyaForm from "./forms/EsyaForm";
 import HayvanForm from "./forms/HayvanForm";
@@ -80,9 +81,8 @@ export default function NewRecordTab({
                 <div
                   className={`w-20 h-20 rounded-full bg-gradient-to-br ${category.gradient} p-4 shadow-lg`}
                 >
-                  <img
-                    src={category.icon}
-                    alt={category.name}
+                  <CategoryIcon
+                    category={category.id as string}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -108,9 +108,8 @@ export default function NewRecordTab({
               <div
                 className={`w-12 h-12 rounded-full bg-gradient-to-br ${selectedCategoryData?.gradient} p-2 shadow-lg`}
               >
-                <img
-                  src={selectedCategoryData?.icon}
-                  alt={selectedCategoryData?.name}
+                <CategoryIcon
+                  category={selectedCategory as string}
                   className="w-full h-full object-contain"
                 />
               </div>

@@ -18,7 +18,68 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ArrowLeft, LogOut, Smartphone, User } from "lucide-react";
+import { useGetAllRecordsForUser } from "@/hooks/useQueries";
+import { ArrowLeft, BarChart2, LogOut, Smartphone, User } from "lucide-react";
+
+function StatsCard({ userCode }: { userCode: string }) {
+  const { t } = useLanguage();
+  const { data: records } = useGetAllRecordsForUser(userCode);
+
+  const totalRecords = records?.length ?? 0;
+  const totalViews =
+    records?.reduce((sum, r) => {
+      try {
+        const raw = localStorage.getItem(`safeloved_scan_${r.uniqueCode}`);
+        if (raw) {
+          const d = JSON.parse(raw);
+          return sum + (d.count || 0);
+        }
+      } catch {
+        /* ignore */
+      }
+      return sum;
+    }, 0) ?? 0;
+
+  const categoryCounts =
+    records?.reduce(
+      (acc, r) => {
+        acc[r.category] = (acc[r.category] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    ) ?? {};
+
+  return (
+    <div className="mb-6 p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-xl border border-primary/20">
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart2 className="h-4 w-4 text-primary" />
+        <span className="text-sm font-semibold">{t.statsTitle}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="text-center p-2 bg-background/60 rounded-lg">
+          <p className="text-2xl font-bold text-primary">{totalRecords}</p>
+          <p className="text-xs text-muted-foreground">{t.totalRecords}</p>
+        </div>
+        <div className="text-center p-2 bg-background/60 rounded-lg">
+          <p className="text-2xl font-bold text-accent">{totalViews}</p>
+          <p className="text-xs text-muted-foreground">{t.totalViews}</p>
+        </div>
+      </div>
+      {Object.keys(categoryCounts).length > 0 && (
+        <div className="flex gap-1.5 flex-wrap mt-3">
+          {Object.entries(categoryCounts).map(([cat, count]) => (
+            <span
+              key={cat}
+              className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded-full font-medium"
+            >
+              {cat}: {count}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface UserScreenProps {
   username: string;
@@ -124,6 +185,7 @@ export default function UserScreen({
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6">
+                <StatsCard userCode={userCode} />
                 <Tabs defaultValue="new-record" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-8">
                     <TabsTrigger value="new-record" className="text-base">

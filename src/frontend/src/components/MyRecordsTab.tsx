@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useGetAllRecordsForUser } from "@/hooks/useQueries";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, FileX, Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { UserRecord } from "../backend";
@@ -30,6 +31,7 @@ function getRecordTitle(record: UserRecord): string {
 
 export default function MyRecordsTab({ userCode }: MyRecordsTabProps) {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const {
     data: records,
     isLoading,
@@ -37,6 +39,10 @@ export default function MyRecordsTab({ userCode }: MyRecordsTabProps) {
   } = useGetAllRecordsForUser(userCode);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+
+  const handleDelete = (_uniqueCode: string) => {
+    queryClient.invalidateQueries({ queryKey: ["userRecords", userCode] });
+  };
 
   const filterTabs: { id: CategoryFilter; label: string }[] = [
     { id: "all", label: t.filterAll },
@@ -144,7 +150,7 @@ export default function MyRecordsTab({ userCode }: MyRecordsTabProps) {
       <div className="grid gap-6">
         {filtered.map((record, idx) => (
           <div key={record.uniqueCode} data-ocid={`records.item.${idx + 1}`}>
-            <RecordCard record={record} />
+            <RecordCard record={record} onDelete={handleDelete} />
           </div>
         ))}
       </div>

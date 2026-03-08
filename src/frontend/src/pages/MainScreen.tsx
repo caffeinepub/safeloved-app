@@ -31,11 +31,51 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import { toast } from "sonner";
 
 interface MainScreenProps {
   onNavigateToUserScreen: (username: string, code: string) => void;
   onNavigateToInquiry: () => void;
+}
+
+// --- SafeLoved SVG Logo ---
+function SafeLovedLogo({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 300 100"
+      className={className}
+      role="img"
+      aria-label="SafeLoved"
+    >
+      <title>SafeLoved</title>
+      {/* Shield icon */}
+      <path
+        d="M28 14 L48 20 L48 42 Q48 58 28 66 Q8 58 8 42 L8 20 Z"
+        fill="white"
+        fillOpacity="0.95"
+      />
+      {/* Heart inside shield */}
+      <path
+        d="M28 52 Q18 44 18 37 Q18 31 24 31 Q26 31 28 34 Q30 31 32 31 Q38 31 38 37 Q38 44 28 52Z"
+        fill="#ff6b9d"
+      />
+      {/* SafeLoved text */}
+      <text
+        x="60"
+        y="62"
+        fontFamily="'Segoe UI', Arial, sans-serif"
+        fontWeight="700"
+        fontSize="38"
+        fill="white"
+        fillOpacity="0.97"
+        letterSpacing="-1"
+      >
+        SafeLoved
+      </text>
+    </svg>
+  );
 }
 
 export default function MainScreen({
@@ -56,11 +96,7 @@ export default function MainScreen({
         <header className="py-6 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <img
-                src="/assets/generated/safeloved-logo-new-transparent.dim_300x100.png"
-                alt="SafeLoved Logo"
-                className="h-12 sm:h-16 w-auto drop-shadow-lg"
-              />
+              <SafeLovedLogo className="h-12 sm:h-16 w-auto drop-shadow-lg" />
             </div>
           </div>
         </header>
