@@ -145,7 +145,9 @@ export interface UserRecord {
     creationTimestamp: Time;
     recordData: RecordData;
     uniqueCode: string;
+    viewCount: bigint;
     category: RecordCategory;
+    location: string;
 }
 export interface QREncodedData {
     contactInfo: string;
@@ -187,6 +189,7 @@ export interface backendInterface {
     addNewRecord(userCode: string, category: RecordCategory, recordData: RecordData, contactPerson: string, contactInfo: string): Promise<string | null>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createNewUserCode(username: string): Promise<UserProfile | null>;
+    deleteRecord(userCode: string, uniqueCode: string): Promise<boolean>;
     generateShareableLink(recordId: string): Promise<string | null>;
     getAllRecordsForUser(userCode: string): Promise<Array<UserRecord>>;
     getAllUserCodes(): Promise<Array<string>>;
@@ -195,9 +198,13 @@ export interface backendInterface {
     getProfileByUserCode(userCode: string): Promise<UserProfile | null>;
     getRecordByShareableLink(linkId: string): Promise<UserRecord | null>;
     getRecordByUniqueCode(code: string): Promise<UserRecord | null>;
+    getRecordViewCount(uniqueCode: string): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    incrementViewCount(uniqueCode: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateRecordData(uniqueCode: string, recordData: RecordData): Promise<boolean>;
+    updateRecordLocation(uniqueCode: string, location: string): Promise<boolean>;
 }
 import type { AracKaydi as _AracKaydi, EsyaKaydi as _EsyaKaydi, HayvanKaydi as _HayvanKaydi, InsanKaydi as _InsanKaydi, QREncodedData as _QREncodedData, RecordCategory as _RecordCategory, RecordData as _RecordData, Time as _Time, UserProfile as _UserProfile, UserRecord as _UserRecord, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -342,6 +349,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
         }
     }
+    async deleteRecord(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteRecord(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteRecord(arg0, arg1);
+            return result;
+        }
+    }
     async generateShareableLink(arg0: string): Promise<string | null> {
         if (this.processError) {
             try {
@@ -454,6 +475,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getRecordViewCount(arg0: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRecordViewCount(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRecordViewCount(arg0);
+            return result;
+        }
+    }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -466,6 +501,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUserProfile(arg0);
             return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async incrementViewCount(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.incrementViewCount(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.incrementViewCount(arg0);
+            return result;
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -493,6 +542,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
+    async updateRecordData(arg0: string, arg1: RecordData): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateRecordData(arg0, to_candid_RecordData_n10(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateRecordData(arg0, to_candid_RecordData_n10(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async updateRecordLocation(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateRecordLocation(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateRecordLocation(arg0, arg1);
             return result;
         }
     }
@@ -534,7 +611,9 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
     creationTimestamp: _Time;
     recordData: _RecordData;
     uniqueCode: string;
+    viewCount: bigint;
     category: _RecordCategory;
+    location: string;
 }): {
     userCode: string;
     username: string;
@@ -542,7 +621,9 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
     creationTimestamp: Time;
     recordData: RecordData;
     uniqueCode: string;
+    viewCount: bigint;
     category: RecordCategory;
+    location: string;
 } {
     return {
         userCode: value.userCode,
@@ -551,7 +632,9 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
         creationTimestamp: value.creationTimestamp,
         recordData: from_candid_RecordData_n19(_uploadFile, _downloadFile, value.recordData),
         uniqueCode: value.uniqueCode,
-        category: from_candid_RecordCategory_n21(_uploadFile, _downloadFile, value.category)
+        viewCount: value.viewCount,
+        category: from_candid_RecordCategory_n21(_uploadFile, _downloadFile, value.category),
+        location: value.location
     };
 }
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {

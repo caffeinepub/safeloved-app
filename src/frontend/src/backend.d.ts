@@ -56,7 +56,9 @@ export interface UserRecord {
     creationTimestamp: Time;
     recordData: RecordData;
     uniqueCode: string;
+    viewCount: bigint;
     category: RecordCategory;
+    location: string;
 }
 export interface QREncodedData {
     contactInfo: string;
@@ -87,6 +89,7 @@ export interface backendInterface {
     addNewRecord(userCode: string, category: RecordCategory, recordData: RecordData, contactPerson: string, contactInfo: string): Promise<string | null>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     createNewUserCode(username: string): Promise<UserProfile | null>;
+    deleteRecord(userCode: string, uniqueCode: string): Promise<boolean>;
     generateShareableLink(recordId: string): Promise<string | null>;
     getAllRecordsForUser(userCode: string): Promise<Array<UserRecord>>;
     getAllUserCodes(): Promise<Array<string>>;
@@ -95,7 +98,11 @@ export interface backendInterface {
     getProfileByUserCode(userCode: string): Promise<UserProfile | null>;
     getRecordByShareableLink(linkId: string): Promise<UserRecord | null>;
     getRecordByUniqueCode(code: string): Promise<UserRecord | null>;
+    getRecordViewCount(uniqueCode: string): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    incrementViewCount(uniqueCode: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateRecordData(uniqueCode: string, recordData: RecordData): Promise<boolean>;
+    updateRecordLocation(uniqueCode: string, location: string): Promise<boolean>;
 }

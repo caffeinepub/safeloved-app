@@ -300,3 +300,112 @@ export function useGetRecordByShareableLink() {
     },
   });
 }
+
+export function useDeleteRecord() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userCode,
+      uniqueCode,
+    }: {
+      userCode: string;
+      uniqueCode: string;
+    }) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.deleteRecord(userCode, uniqueCode);
+      } catch (error: any) {
+        console.error("Delete record error:", error);
+        throw new Error(getErrorMessage(error));
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["userRecords", variables.userCode],
+      });
+    },
+    retry: (failureCount, error: any) => {
+      if (isCanisterStoppedError(error)) return false;
+      return failureCount < 2;
+    },
+  });
+}
+
+export function useUpdateRecordData() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      uniqueCode,
+      recordData,
+    }: {
+      userCode: string;
+      uniqueCode: string;
+      recordData: RecordData;
+    }) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.updateRecordData(uniqueCode, recordData);
+      } catch (error: any) {
+        console.error("Update record data error:", error);
+        throw new Error(getErrorMessage(error));
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["userRecords", variables.userCode],
+      });
+    },
+    retry: (failureCount, error: any) => {
+      if (isCanisterStoppedError(error)) return false;
+      return failureCount < 2;
+    },
+  });
+}
+
+export function useUpdateRecordLocation() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async ({
+      uniqueCode,
+      location,
+    }: {
+      uniqueCode: string;
+      location: string;
+    }) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.updateRecordLocation(uniqueCode, location);
+      } catch (error: any) {
+        console.error("Update record location error:", error);
+        throw new Error(getErrorMessage(error));
+      }
+    },
+    retry: (failureCount, error: any) => {
+      if (isCanisterStoppedError(error)) return false;
+      return failureCount < 2;
+    },
+  });
+}
+
+export function useIncrementViewCount() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (uniqueCode: string) => {
+      if (!actor) throw new Error("Sunucu bağlantısı kurulamadı");
+      try {
+        return await actor.incrementViewCount(uniqueCode);
+      } catch (error: any) {
+        console.error("Increment view count error:", error);
+        // Silently fail - view count is not critical
+        return false;
+      }
+    },
+    retry: false,
+  });
+}

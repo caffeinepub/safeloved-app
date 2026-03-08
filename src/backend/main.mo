@@ -6,10 +6,12 @@ import Time "mo:core/Time";
 import Text "mo:core/Text";
 import Iter "mo:core/Iter";
 import Nat "mo:core/Nat";
+import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import MixinStorage "blob-storage/Mixin";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -120,21 +122,21 @@ actor {
     contactInfo : Text;
   };
 
-  type RecordData = {
+  public type RecordData = {
     #insan : InsanKaydi;
     #hayvan : HayvanKaydi;
     #esya : EsyaKaydi;
     #arac : AracKaydi;
   };
 
-  type QREncodedData = {
+  public type QREncodedData = {
     displayText : Text;
     uniqueCode : Text;
     contactPerson : Text;
     contactInfo : Text;
   };
 
-  type UserRecord = {
+  public type UserRecord = {
     userCode : Text;
     username : Text;
     category : RecordCategory;
@@ -142,6 +144,8 @@ actor {
     uniqueCode : Text;
     qrEncodedData : QREncodedData;
     creationTimestamp : Time.Time;
+    location : Text;
+    viewCount : Nat;
   };
 
   let userCodes = Map.empty<Text, Time.Time>();
@@ -268,6 +272,8 @@ actor {
       uniqueCode;
       qrEncodedData;
       creationTimestamp = Time.now();
+      location = "";
+      viewCount = 0;
     };
 
     userRecords.add(uniqueCode, newRecord);
@@ -350,5 +356,120 @@ actor {
       Runtime.trap("Sadece yöneticiler tüm kullanıcı kodlarını görüntüleyebilir.");
     };
     userCodes.keys().toArray();
+  };
+
+  public shared ({ caller }) func updateRecordData(uniqueCode : Text, recordData : RecordData) : async Bool {
+    ensureUserAccess(caller);
+    if (not hasUserAccess(caller)) {
+      Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
+    };
+    switch (userRecords.get(uniqueCode)) {
+      case (null) {
+        Runtime.trap("Kayıt bulunamadı.");
+      };
+      case (?existingRecord) {
+        switch (userCodeToPrincipal.get(existingRecord.userCode)) {
+          case (?owner) {
+            if (caller != owner and not AccessControl.isAdmin(accessControlState, caller)) {
+              Runtime.trap("Yetkili kullanıcılar sadece kendi kayıtlarını güncelleyebilirler.");
+            };
+            let updatedRecord = { existingRecord with recordData };
+            userRecords.add(uniqueCode, updatedRecord);
+            switch (userToRecords.get(existingRecord.userCode)) {
+              case (?recordsMap) {
+                recordsMap.add(uniqueCode, updatedRecord);
+              };
+              case (null) {};
+            };
+            true;
+          };
+          case (null) {
+            Runtime.trap("Kayıt sahibi bulunamadı.");
+          };
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateRecordLocation(uniqueCode : Text, location : Text) : async Bool {
+    ensureUserAccess(caller);
+    if (not hasUserAccess(caller)) {
+      Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
+    };
+    switch (userRecords.get(uniqueCode)) {
+      case (null) {
+        Runtime.trap("Kayıt bulunamadı.");
+      };
+      case (?existingRecord) {
+        switch (userCodeToPrincipal.get(existingRecord.userCode)) {
+          case (?owner) {
+            if (caller != owner and not AccessControl.isAdmin(accessControlState, caller)) {
+              Runtime.trap("Yetkili kullanıcılar sadece kendi kayıtlarını güncelleyebilirler.");
+            };
+            let updatedRecord = { existingRecord with location };
+            userRecords.add(uniqueCode, updatedRecord);
+            switch (userToRecords.get(existingRecord.userCode)) {
+              case (?recordsMap) {
+                recordsMap.add(uniqueCode, updatedRecord);
+              };
+              case (null) {};
+            };
+            true;
+          };
+          case (null) {
+            Runtime.trap("Kayıt sahibi bulunamadı.");
+          };
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteRecord(userCode : Text, uniqueCode : Text) : async Bool {
+    ensureUserAccess(caller);
+    if (not hasUserAccess(caller)) {
+      Runtime.trap("Yetkilendirme hatası. Lütfen tekrar giriş yapın.");
+    };
+    switch (userCodeToPrincipal.get(userCode)) {
+      case (?owner) {
+        if (caller != owner and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Yetkili kullanıcılar sadece kendi kayıtlarını silebilirler.");
+        };
+        userRecords.remove(uniqueCode);
+        switch (userToRecords.get(userCode)) {
+          case (?recordsMap) {
+            recordsMap.remove(uniqueCode);
+          };
+          case (null) {};
+        };
+        true;
+      };
+      case (null) {
+        Runtime.trap("Kullanıcı kodu bulunamadı.");
+      };
+    };
+  };
+
+  public shared ({ caller }) func incrementViewCount(uniqueCode : Text) : async Bool {
+    switch (userRecords.get(uniqueCode)) {
+      case (null) { false };
+      case (?existingRecord) {
+        let updatedRecord = { existingRecord with viewCount = existingRecord.viewCount + 1 };
+        userRecords.add(uniqueCode, updatedRecord);
+        switch (userToRecords.get(existingRecord.userCode)) {
+          case (?recordsMap) {
+            recordsMap.add(uniqueCode, updatedRecord);
+          };
+          case (null) {};
+        };
+        true;
+      };
+    };
+  };
+
+  public query ({ caller }) func getRecordViewCount(uniqueCode : Text) : async Nat {
+    switch (userRecords.get(uniqueCode)) {
+      case (null) { 0 };
+      case (?record) { record.viewCount };
+    };
   };
 };

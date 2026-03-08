@@ -2,53 +2,73 @@
 
 ## Current State
 
-Uygulama tamamen çalışıyor. Mevcut özellikler:
-- Karanlık mod + 5 renk teması (purple, green, orange, red, blue)
-- Kayıt arama/filtreleme (kategori + metin)
-- Kayıt düzenleme (overrides via localStorage)
-- Versiyon geçmişi (kayıt değişiklik takibi)
-- Fotoğraf ekleme (base64 localStorage)
-- Konum etiketleme + Google Maps linki
-- QR tarama geçmişi (localStorage, maks 20 kayıt)
-- Sesli arama (Web Speech API)
-- QR tarama analitiği (görüntülenme sayısı ve tarihi)
-- PDF/yazdırma (window.print)
-- Bildirim izni sistemi
-- Güncelleme bildirimi (localStorage version check)
-- Paylaşım linki
-- İstatistik paneli (toplam kayıt, toplam görüntülenme)
-- Çapraz cihaz senkronizasyonu ipucu
+Backend (`main.mo`) şu an şunları destekliyor:
+- Kullanıcı profili oluşturma / kodu ile giriş
+- Kayıt oluşturma (insan, hayvan, eşya, araç kategorileri)
+- Kayıt sorgulama (uniqueCode ile)
+- Paylaşım linki oluşturma ve çözme
+- Rol tabanlı erişim (otomatik "user" rolü)
+
+Frontend'de şu özellikler **görsel olarak var ama sadece localStorage'da tutuluyor** (backend desteği yok):
+- Fotoğraf ekleme/kaldırma (`safeloved_photo_<code>`)
+- Kayıt düzenleme (alan override'ları `safeloved_record_overrides_<code>`)
+- Versiyon geçmişi (`safeloved_versions_<code>`)
+- GPS konum (`safeloved_location_<code>`)
+- QR tarama sayacı (`safeloved_scan_<code>`)
+- QR tarama geçmişi (HISTORY_KEY)
+- Kayıt silme (sadece localStorage temizliyor)
 
 ## Requested Changes (Diff)
 
 ### Add
-- Kayıt silme özelliği: RecordCard içinde kayıt silme butonu ve onay dialog'u
-- QR sekmesinde sonuç gösterimi: QR tarama sonrası bulunan kayıt QR sekmesinde de gösterilsin
-- Konum GPS otomatik doldurma: Düzenleme dialogunda "Konumumu Al" butonu (Geolocation API)
-- Sesli aramayı daha belirgin hale getirme: Dinleme durumunda animasyon ve görsel iyileştirme
+
+Backend'e eklenecekler:
+- `deleteRecord(userCode, uniqueCode)` -- kullanıcının bir kaydını siler
+- `updateRecordData(uniqueCode, recordData)` -- kayıt verilerini günceller (insan/hayvan/eşya/araç alanları)
+- `updateRecordLocation(uniqueCode, location)` -- konum string'i günceller
+- `incrementViewCount(uniqueCode)` -- QR tarama sayacını artırır (herkese açık)
+- `getRecordViewCount(uniqueCode)` -- görüntülenme sayısını döner (herkese açık)
+- `UserRecord` tipine `location` ve `viewCount` alanları eklenir
+
+Frontend'de güncelleme:
+- RecordCard: düzenleme/silme/konum/fotoğraf işlemleri backend'e yazılacak
+- InquiryScreen: QR tarama anında `incrementViewCount` çağrılacak
+- MyRecordsTab: silme sonrası backend'den yeniden yükleme
 
 ### Modify
-- RecordCard: Silme butonu ve onay dialog ekle, konum editörde GPS butonu ekle
-- InquiryScreen: QR tarama sonrası record state'i QR sekmesinde göster
-- MyRecordsTab: Kayıt sayısını daha belirgin göster
+
+- `UserRecord` tipi: `location: Text` ve `viewCount: Nat` alanları eklenir
+- `addNewRecord`: başlangıçta `location = ""`, `viewCount = 0` değerleriyle oluşturur
+- `getAllRecordsForUser`: güncel `location` ve `viewCount` ile döner
+- `getRecordByUniqueCode`: güncel `location` ve `viewCount` ile döner
+- Frontend `RecordCard`: localStorage yerine backend API çağırır
+- Frontend `InquiryScreen`: QR scan'de `incrementViewCount` çağırır
 
 ### Remove
-- Yok
+
+- RecordCard'da localStorage-only kod kaldırılmaz ama backend başarısız olursa localStorage fallback olarak kalır
 
 ## Implementation Plan
 
-1. RecordCard'a kayıt silme butonu ekle (onay dialog ile)
-   - "Sil" butonu action buttons row'una ekle
-   - AlertDialog onay ekle
-   - localStorage'dan tüm ilgili anahtarları temizle (photo, location, versions, overrides, scan)
-   - onDelete callback prop ekle
+1. Backend `main.mo` güncelle:
+   - `UserRecord` tipine `location: Text` ve `viewCount: Nat` ekle
+   - `userRecordLocations` ve `userRecordViewCounts` map'leri ekle (ya da UserRecord'u güncelle)
+   - `updateRecordData` fonksiyonu ekle
+   - `updateRecordLocation` fonksiyonu ekle
+   - `deleteRecord` fonksiyonu ekle
+   - `incrementViewCount` fonksiyonu ekle (herkese açık query/shared)
+   - `getRecordViewCount` fonksiyonu ekle
 
-2. MyRecordsTab'a onDelete callback geçir, silinen kaydı listeden kaldır
+2. Frontend `backend.d.ts` güncelle (generate_motoko_code ile otomatik)
 
-3. InquiryScreen QR sekmesinde sonuç gösterimi
-   - QR tarama sonrası bulunan record'u ayrı state'e kaydet
-   - QR sekmesinde record bulunanında sonucu göster
+3. Frontend RecordCard güncelle:
+   - Düzenleme kaydetme: `updateRecordData` çağır
+   - Konum kaydetme: `updateRecordLocation` çağır
+   - Silme: `deleteRecord` çağır
+   - localStorage fallback kalsın
 
-4. RecordCard edit dialog'una GPS konum butonu ekle (Geolocation API)
+4. Frontend InquiryScreen güncelle:
+   - QR scan ve kod araması sonrası `incrementViewCount` çağır
+   - Sonuç kartında `record.viewCount` göster
 
-5. translations.ts güncelle: deleteRecord, confirmDelete, deleteSuccess anahtarları ekle (tüm 9 dil)
+5. Frontend MyRecordsTab: silme sonrası query invalidate

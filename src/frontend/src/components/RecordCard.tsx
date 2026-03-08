@@ -19,7 +19,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useGenerateShareLink } from "@/hooks/useQueries";
+import {
+  useDeleteRecord,
+  useGenerateShareLink,
+  useUpdateRecordData,
+  useUpdateRecordLocation,
+} from "@/hooks/useQueries";
 import { generateEnhancedQRCode } from "@/lib/qrCodeGenerator";
 import {
   Check,
@@ -46,6 +51,7 @@ import CategoryIcon from "./CategoryIcon";
 
 interface RecordCardProps {
   record: UserRecord;
+  userCode: string;
   onDelete?: (uniqueCode: string) => void;
 }
 
@@ -130,9 +136,16 @@ function saveOverrides(
   }
 }
 
-export default function RecordCard({ record, onDelete }: RecordCardProps) {
+export default function RecordCard({
+  record,
+  userCode,
+  onDelete,
+}: RecordCardProps) {
   const { t } = useLanguage();
   const generateShareLink = useGenerateShareLink();
+  const deleteRecord = useDeleteRecord();
+  const updateRecordData = useUpdateRecordData();
+  const updateRecordLocation = useUpdateRecordLocation();
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(true);
@@ -358,11 +371,108 @@ export default function RecordCard({ record, onDelete }: RecordCardProps) {
     handleLocationSave(editLocation);
     setShowEditDialog(false);
     toast.success(t.success);
+
+    // Build updated RecordData for backend sync
+    let updatedRecordData: import("../backend").RecordData | null = null;
+    try {
+      const ev = editValues;
+      switch (record.recordData.__kind__) {
+        case "insan":
+          updatedRecordData = {
+            __kind__: "insan",
+            insan: {
+              adSoyad: ev.adSoyad || record.recordData.insan.adSoyad,
+              yas: BigInt(
+                Number(ev.yas) || Number(record.recordData.insan.yas),
+              ),
+              iliski: ev.iliski || record.recordData.insan.iliski,
+              aciklama: ev.aciklama || record.recordData.insan.aciklama,
+              contactPerson:
+                ev.contactPerson || record.recordData.insan.contactPerson,
+              contactInfo:
+                ev.contactInfo || record.recordData.insan.contactInfo,
+            },
+          };
+          break;
+        case "hayvan":
+          updatedRecordData = {
+            __kind__: "hayvan",
+            hayvan: {
+              ad: ev.ad || record.recordData.hayvan.ad,
+              tur: ev.tur || record.recordData.hayvan.tur,
+              renk: ev.renk || record.recordData.hayvan.renk,
+              notlar: ev.notlar || record.recordData.hayvan.notlar,
+              contactPerson:
+                ev.contactPerson || record.recordData.hayvan.contactPerson,
+              contactInfo:
+                ev.contactInfo || record.recordData.hayvan.contactInfo,
+            },
+          };
+          break;
+        case "esya":
+          updatedRecordData = {
+            __kind__: "esya",
+            esya: {
+              esyaAdi: ev.esyaAdi || record.recordData.esya.esyaAdi,
+              marka: ev.marka || record.recordData.esya.marka,
+              seriNo: ev.seriNo || record.recordData.esya.seriNo,
+              aciklama: ev.aciklama || record.recordData.esya.aciklama,
+              contactPerson:
+                ev.contactPerson || record.recordData.esya.contactPerson,
+              contactInfo: ev.contactInfo || record.recordData.esya.contactInfo,
+            },
+          };
+          break;
+        case "arac":
+          updatedRecordData = {
+            __kind__: "arac",
+            arac: {
+              plaka: ev.plaka || record.recordData.arac.plaka,
+              marka: ev.marka || record.recordData.arac.marka,
+              model: ev.model || record.recordData.arac.model,
+              renk: ev.renk || record.recordData.arac.renk,
+              contactPerson:
+                ev.contactPerson || record.recordData.arac.contactPerson,
+              contactInfo: ev.contactInfo || record.recordData.arac.contactInfo,
+            },
+          };
+          break;
+      }
+    } catch {
+      /* ignore build errors - localStorage already saved */
+    }
+
+    // Sync to backend (fire-and-forget, silently ignore errors)
+    if (updatedRecordData) {
+      updateRecordData
+        .mutateAsync({
+          userCode,
+          uniqueCode: record.uniqueCode,
+          recordData: updatedRecordData,
+        })
+        .catch(() => {
+          /* backend sync failed silently */
+        });
+    }
+
+    // Sync location if changed
+    const prevLocation = getLocation(record.uniqueCode) || "";
+    if (editLocation !== prevLocation) {
+      updateRecordLocation
+        .mutateAsync({
+          uniqueCode: record.uniqueCode,
+          location: editLocation.trim(),
+        })
+        .catch(() => {
+          /* backend sync failed silently */
+        });
+    }
   };
 
-  // Delete record: clear all localStorage data for this record
+  // Delete record: clear all localStorage data for this record + backend
   const handleDeleteConfirm = () => {
     const code = record.uniqueCode;
+    // Clear localStorage first (always succeeds locally)
     try {
       localStorage.removeItem(`safeloved_photo_${code}`);
       localStorage.removeItem(`safeloved_location_${code}`);
@@ -375,6 +485,11 @@ export default function RecordCard({ record, onDelete }: RecordCardProps) {
     setShowDeleteDialog(false);
     toast.success(t.deleteSuccess);
     onDelete?.(code);
+
+    // Also delete from backend (fire-and-forget, silently ignore errors)
+    deleteRecord.mutateAsync({ userCode, uniqueCode: code }).catch(() => {
+      /* backend delete failed silently - localStorage already cleared */
+    });
   };
 
   // GPS location detection
@@ -472,12 +587,24 @@ export default function RecordCard({ record, onDelete }: RecordCardProps) {
           </div>
           {/* Scan count badge */}
           <div className="text-right text-xs text-muted-foreground space-y-0.5">
-            <div className="flex items-center gap-1 justify-end">
-              <Eye className="h-3 w-3" />
-              <span>
-                {scanData.count} {t.scanCount}
-              </span>
+            <div
+              className="flex items-center gap-1 justify-end"
+              title="Toplam görüntülenme (backend)"
+            >
+              <Eye className="h-3 w-3 text-primary/70" />
+              <span className="font-medium">{Number(record.viewCount)}</span>
             </div>
+            {scanData.count > 0 && (
+              <div
+                className="flex items-center gap-1 justify-end"
+                title="Bu cihazdan tarama"
+              >
+                <Eye className="h-3 w-3" />
+                <span>
+                  {scanData.count} {t.scanCount}
+                </span>
+              </div>
+            )}
             {scanData.lastAt && (
               <div className="flex items-center gap-1 justify-end">
                 <Clock className="h-3 w-3" />

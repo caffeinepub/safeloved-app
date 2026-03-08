@@ -86,7 +86,9 @@ export const UserRecord = IDL.Record({
   'creationTimestamp' : Time,
   'recordData' : RecordData,
   'uniqueCode' : IDL.Text,
+  'viewCount' : IDL.Nat,
   'category' : RecordCategory,
+  'location' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
@@ -124,6 +126,7 @@ export const idlService = IDL.Service({
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createNewUserCode' : IDL.Func([IDL.Text], [IDL.Opt(UserProfile)], []),
+  'deleteRecord' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   'generateShareableLink' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], []),
   'getAllRecordsForUser' : IDL.Func([IDL.Text], [IDL.Vec(UserRecord)], []),
   'getAllUserCodes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -140,13 +143,17 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserRecord)],
       ['query'],
     ),
+  'getRecordViewCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'incrementViewCount' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'updateRecordData' : IDL.Func([IDL.Text, RecordData], [IDL.Bool], []),
+  'updateRecordLocation' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
@@ -230,7 +237,9 @@ export const idlFactory = ({ IDL }) => {
     'creationTimestamp' : Time,
     'recordData' : RecordData,
     'uniqueCode' : IDL.Text,
+    'viewCount' : IDL.Nat,
     'category' : RecordCategory,
+    'location' : IDL.Text,
   });
   
   return IDL.Service({
@@ -268,6 +277,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createNewUserCode' : IDL.Func([IDL.Text], [IDL.Opt(UserProfile)], []),
+    'deleteRecord' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
     'generateShareableLink' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], []),
     'getAllRecordsForUser' : IDL.Func([IDL.Text], [IDL.Vec(UserRecord)], []),
     'getAllUserCodes' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -284,13 +294,17 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserRecord)],
         ['query'],
       ),
+    'getRecordViewCount' : IDL.Func([IDL.Text], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'incrementViewCount' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'updateRecordData' : IDL.Func([IDL.Text, RecordData], [IDL.Bool], []),
+    'updateRecordLocation' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
   });
 };
 

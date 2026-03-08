@@ -150,7 +150,11 @@ export default function MyRecordsTab({ userCode }: MyRecordsTabProps) {
       <div className="grid gap-6">
         {filtered.map((record, idx) => (
           <div key={record.uniqueCode} data-ocid={`records.item.${idx + 1}`}>
-            <RecordCard record={record} onDelete={handleDelete} />
+            <RecordCard
+              record={record}
+              userCode={userCode}
+              onDelete={handleDelete}
+            />
           </div>
         ))}
       </div>

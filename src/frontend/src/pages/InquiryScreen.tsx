@@ -16,6 +16,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   useGetRecordByShareableLink,
   useGetRecordByUniqueCode,
+  useIncrementViewCount,
 } from "@/hooks/useQueries";
 import {
   decodeDualPurposeData,
@@ -29,6 +30,7 @@ import {
   Camera,
   Clock,
   ExternalLink,
+  Eye,
   Info,
   Loader2,
   MapPin,
@@ -169,6 +171,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
 
   const getRecordMutation = useGetRecordByUniqueCode();
   const getRecordByShareableLink = useGetRecordByShareableLink();
+  const incrementViewCount = useIncrementViewCount();
 
   const {
     qrResults,
@@ -199,6 +202,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
           if (result) {
             setRecord(result);
             updateScanAnalytics(result.uniqueCode);
+            incrementViewCount.mutateAsync(result.uniqueCode).catch(() => {});
             toast.success(t.toasts.recordLoaded);
           } else {
             toast.error(t.recordNotFound);
@@ -223,6 +227,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
       if (result) {
         setRecord(result);
         updateScanAnalytics(result.uniqueCode);
+        incrementViewCount.mutateAsync(result.uniqueCode).catch(() => {});
         addScanHistory(trimmedCode);
         setScanHistory(getScanHistory());
         toast.success(t.toasts.recordLoaded);
@@ -327,6 +332,7 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
   };
 
   // QR processing with green flash feedback (A2)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: incrementViewCount.mutateAsync is stable from useMutation
   useEffect(() => {
     if (qrResults.length > 0 && isActive && !isProcessingQR) {
       const latestResult = qrResults[0];
@@ -381,6 +387,9 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                   setRecord(result);
                   setQrRecord(result);
                   updateScanAnalytics(result.uniqueCode);
+                  incrementViewCount
+                    .mutateAsync(result.uniqueCode)
+                    .catch(() => {});
                   addScanHistory(uniqueCode);
                   setScanHistory(getScanHistory());
                   toast.success(t.toasts.recordLoaded);
@@ -696,13 +705,21 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                                 category={record.category}
                                 className="w-16 h-16 object-contain"
                               />
-                              <div>
+                              <div className="flex-1">
                                 <CardTitle className="text-xl">
                                   {getRecordTitle()}
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                   {getCategoryName()}
                                 </p>
+                              </div>
+                              <div className="text-right text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1 justify-end">
+                                  <Eye className="h-3 w-3 text-primary/70" />
+                                  <span className="font-medium">
+                                    {Number(record.viewCount)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </CardHeader>
@@ -1049,13 +1066,21 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
                                 category={qrRecord.category}
                                 className="w-16 h-16 object-contain"
                               />
-                              <div>
+                              <div className="flex-1">
                                 <CardTitle className="text-xl">
                                   {getRecordTitleForRecord(qrRecord)}
                                 </CardTitle>
                                 <p className="text-sm text-muted-foreground">
                                   {getCategoryNameForRecord(qrRecord)}
                                 </p>
+                              </div>
+                              <div className="text-right text-xs text-muted-foreground">
+                                <div className="flex items-center gap-1 justify-end">
+                                  <Eye className="h-3 w-3 text-primary/70" />
+                                  <span className="font-medium">
+                                    {Number(qrRecord.viewCount)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </CardHeader>

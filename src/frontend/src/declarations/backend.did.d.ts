@@ -65,7 +65,9 @@ export interface UserRecord {
   'creationTimestamp' : Time,
   'recordData' : RecordData,
   'uniqueCode' : string,
+  'viewCount' : bigint,
   'category' : RecordCategory,
+  'location' : string,
 }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -104,6 +106,7 @@ export interface _SERVICE {
   >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createNewUserCode' : ActorMethod<[string], [] | [UserProfile]>,
+  'deleteRecord' : ActorMethod<[string, string], boolean>,
   'generateShareableLink' : ActorMethod<[string], [] | [string]>,
   'getAllRecordsForUser' : ActorMethod<[string], Array<UserRecord>>,
   'getAllUserCodes' : ActorMethod<[], Array<string>>,
@@ -112,9 +115,13 @@ export interface _SERVICE {
   'getProfileByUserCode' : ActorMethod<[string], [] | [UserProfile]>,
   'getRecordByShareableLink' : ActorMethod<[string], [] | [UserRecord]>,
   'getRecordByUniqueCode' : ActorMethod<[string], [] | [UserRecord]>,
+  'getRecordViewCount' : ActorMethod<[string], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'incrementViewCount' : ActorMethod<[string], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'updateRecordData' : ActorMethod<[string, RecordData], boolean>,
+  'updateRecordLocation' : ActorMethod<[string, string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
