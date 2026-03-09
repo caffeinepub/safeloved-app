@@ -610,17 +610,35 @@ export default function InquiryScreen({ onBack }: InquiryScreenProps) {
             <CardContent>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="code" data-ocid="inquiry.tab">
-                    <Search className="mr-2 h-4 w-4" />
-                    {t.searchByCode}
+                  <TabsTrigger
+                    value="code"
+                    data-ocid="inquiry.tab"
+                    className="flex flex-col gap-0.5 h-auto py-2 px-1"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span className="text-[10px] leading-tight text-center">
+                      {t.searchByCode}
+                    </span>
                   </TabsTrigger>
-                  <TabsTrigger value="qr" data-ocid="inquiry.tab">
-                    <QrCode className="mr-2 h-4 w-4" />
-                    {t.scanQRCode}
+                  <TabsTrigger
+                    value="qr"
+                    data-ocid="inquiry.tab"
+                    className="flex flex-col gap-0.5 h-auto py-2 px-1"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    <span className="text-[10px] leading-tight text-center">
+                      {t.scanQRCode}
+                    </span>
                   </TabsTrigger>
-                  <TabsTrigger value="history" data-ocid="inquiry.tab">
-                    <Clock className="mr-2 h-4 w-4" />
-                    {t.scanHistory}
+                  <TabsTrigger
+                    value="history"
+                    data-ocid="inquiry.tab"
+                    className="flex flex-col gap-0.5 h-auto py-2 px-1"
+                  >
+                    <Clock className="h-4 w-4" />
+                    <span className="text-[10px] leading-tight text-center">
+                      {t.scanHistory}
+                    </span>
                   </TabsTrigger>
                 </TabsList>
 
